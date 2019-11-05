@@ -1,17 +1,17 @@
 <template>
-  <div>
-    <p>No options yet..</p>
-  </div>
+	<div>
+		<p>No options yet..</p>
+	</div>
 </template>
 
 <script>
 export default {
-  name: 'App',
-};
+	name: 'App',
+}
 </script>
 
 <style scoped>
 p {
-  font-size: 20px;
+	font-size: 20px;
 }
 </style>

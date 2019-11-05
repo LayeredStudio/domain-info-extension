@@ -1,12 +1,12 @@
-import Vue from 'vue';
-import App from './App';
+import Vue from 'vue'
+import App from './App'
 
-global.browser = require('webextension-polyfill');
-Vue.prototype.$browser = global.browser;
+global.browser = require('webextension-polyfill')
+Vue.prototype.$browser = global.browser
 
 /* eslint-disable no-new */
 new Vue({
-  el: '#app',
+	el: '#app',
 
-  render: h => h(App),
-});
+	render: h => h(App),
+})
