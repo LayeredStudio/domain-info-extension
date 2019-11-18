@@ -1,21 +1,22 @@
 <template>
 	<div class="app-popup">
-		<h2 v-if="!domainRoot" class="text-center">{{ domain }}</h2>
-		<h2 v-if="domainRoot" class="text-center">
-			<span class="text-muted">{{ domain.replace(domainRoot, '') }}</span>{{ domainRoot }}
+		<h2 v-if="!domainRoot" class="text-center my-3">{{ domain }}</h2>
+		<h2 v-if="domainRoot" class="text-center my-3">
+			<span class="text-muted">{{ domain.replace(domainRoot, '') }}</span
+			>{{ domainRoot }}
 		</h2>
 
-		<p v-if="!valid" class="text-center alert">Not a valid domain, no WHOIS or DNS</p>
-
-		<div v-if="valid" class="tabs">
-			<ul>
-				<li v-for="(tab, index) in tabs" :class="{ active: index === tabActive, error: tab.status === 'error' }" @click="tabActive = index">
-					<strong>{{ tab.title }}</strong>
-					<br /><small>{{ tab.subtitle || '..' }}</small>
+		<div v-if="valid">
+			<ul class="nav nav-tabs sticky-top bg-white">
+				<li v-for="(tab, index) in tabs" class="nav-item">
+					<span class="nav-link text-center" :class="{ active: index === tabActive, error: tab.status === 'error' }" @click="tabActive = index">
+						<strong>{{ tab.title }}</strong
+						><br /><small>{{ tab.subtitle || '..' }}</small>
+					</span>
 				</li>
 			</ul>
 
-			<div v-for="(tab, index) in tabs" v-if="index === tabActive" class="tab-content">
+			<div v-for="(tab, index) in tabs" v-if="index === tabActive" class="py-2">
 				<div v-if="tab.status === 'loaded'">
 					<div v-if="tab.title === 'NS'" class="bg-light rounded p-2 mb-3">
 						<table class="table table-hover">
@@ -101,7 +102,7 @@
 						</table>
 					</div>
 					<div v-else-if="tab.title === 'WHOIS'">
-						<div v-for="group in whoisGroup" class="bg-light rounded p-2 mb-3">
+						<div v-for="group in whoisGroup" class="bg-light rounded p-2 mb-3" :class="{ 'd-none': !group.found }">
 							<h4>{{ group.title }}</h4>
 
 							<table class="table table-hover">
@@ -130,49 +131,53 @@
 						</div>
 					</div>
 					<div v-else-if="tab.title === 'Overview'" class="box">
-						<div class="row mt-4 mb-3">
+						<div class="row mt-1 mb-3">
 							<div class="col-auto text-center">
-								<h4 class="text-capitalize rounded px-2 py-1 mb-1" :class="[`badge-${tab.content.status}`]">{{ tab.content.status }}</h4>
-								<span v-if="tab.content.status === 'registered' && tab.content.registrar.name" class="text-muted">
+								<h4 class="text-capitalize rounded px-2 py-1 mb-1" :class="[`badge-${tab.content.availability}`]">{{ tab.content.availability }}</h4>
+								<span v-if="tab.content.availability === 'registered' && tab.content.registrar.name" class="text-muted">
 									at
-									<a
-										v-if="tab.content.registrar.url"
-										target="_blank"
-										:href="(tab.content.registrar.url.includes('://') ? '' : 'http://') + tab.content.registrar.url"
-										>{{ tab.content.registrar.name }}</a
-									>
+									<a v-if="tab.content.registrar.url" target="_blank" :href="tab.content.registrar.url">{{ tab.content.registrar.name }}</a>
 									<span v-else>{{ tab.content.registrar.name }}</span>
 								</span>
 							</div>
 							<div class="col">
-								<span v-for="status in tab.content.statusExtra" class="badge badge-light m-1">{{ status }}</span>
+								<span v-for="status in tab.content.status" class="badge badge-light m-1">{{ status }}</span>
 							</div>
 						</div>
 
-						<div v-if="tab.content.status === 'registered'" class="bg-light rounded p-3 mb-3">
+						<div v-if="tab.content.availability === 'registered'" class="bg-light rounded p-3 mb-3">
 							<div class="row align-items-center text-center">
 								<div class="col">
 									<p class="mb-2 lead">
-										<strong>{{ formatDate(tab.content.dates.created) }}</strong>
+										<strong v-if="tab.content.dates.created">{{ formatDate(tab.content.dates.created) }}</strong>
+										<i v-if="!tab.content.dates.created" class="text-muted"><small>unknown</small></i>
 									</p>
 									<p class="text-uppercase text-muted mb-0">Created</p>
 								</div>
 								<div class="col">
 									<p class="mb-2 lead">
-										<strong>{{ formatDate(tab.content.dates.updated) }}</strong>
+										<strong v-if="tab.content.dates.updated">{{ formatDate(tab.content.dates.updated) }}</strong>
+										<i v-if="!tab.content.dates.updated" class="text-muted"><small>unknown</small></i>
 									</p>
 									<p class="text-uppercase text-muted mb-0">Updated</p>
 								</div>
 								<div class="col">
 									<p class="mb-2 lead">
-										<strong>{{ formatDate(tab.content.dates.expiry) }}</strong>
+										<strong v-if="tab.content.dates.expiry">{{ formatDate(tab.content.dates.expiry) }}</strong>
+										<i v-if="!tab.content.dates.expiry" class="text-muted"><small>unknown</small></i>
 									</p>
-									<p class="text-uppercase text-muted mb-0">Expires in {{ inDays(tab.content.dates.expiry) }} days</p>
+									<p v-if="tab.content.dates.expiry && inDays(tab.content.dates.expiry) >= 0" class="text-uppercase text-muted mb-0">
+										Expires in {{ inDays(tab.content.dates.expiry) }} days
+									</p>
+									<p v-else-if="tab.content.dates.expiry && inDays(tab.content.dates.expiry) < 0" class="text-uppercase text-muted mb-0">
+										Expired <span class="badge badge-warning">{{ inDays(tab.content.dates.expiry) * -1 }} days ago</span>
+									</p>
+									<p v-else class="text-uppercase text-muted mb-0">Expires</p>
 								</div>
 							</div>
 						</div>
 
-						<div v-if="tab.content.status === 'registered' && data.whoisD" class="bg-light rounded p-3 mb-3">
+						<div v-if="tab.content.availability === 'registered' && data.whoisD" class="bg-light rounded p-3 mb-3">
 							<div class="row align-items-center">
 								<div class="col-auto">
 									<img
@@ -212,7 +217,7 @@
 							</div>
 						</div>
 
-						<div v-if="tab.content.status === 'available'" class="bg-light rounded p-3 mb-3">
+						<div v-if="tab.content.availability === 'available'" class="bg-light rounded p-3 mb-3">
 							<p class="lead">Great news, this domain is available for registration!</p>
 							<p>
 								Register now with
@@ -234,6 +239,7 @@
 				</div>
 			</div>
 		</div>
+		<div v-else class="text-center alert alert-warning">Not a valid domain, can't get WHOIS or DNS data</div>
 	</div>
 </template>
 
@@ -291,14 +297,15 @@ export default {
 						'Registry WHOIS Server',
 						'Registrar IANA ID',
 						'Registrar Abuse Contact Email',
-						'Abuse Contact',
 						'Registrar Abuse Contact Phone',
-						'Reseller',
-						'Reseller URL',
 						'Referral URL',
 						'Registrar-Reseller Name',
+						'Reseller',
+						'Reseller URL',
+						'Reseller Name',
 						'Reseller Email',
 						'admin-contact',
+						'Abuse Contact',
 						'source',
 					],
 					found: 0,
@@ -308,6 +315,7 @@ export default {
 					fields: [
 						'Registry Registrant ID',
 						'Registrant ID',
+						'Registrant Contact ID',
 						'Registrant Name',
 						'Registrant Organization',
 						'Registrant Organisation',
@@ -317,12 +325,12 @@ export default {
 						'Registrant State',
 						'Registrant Postal Code',
 						'Registrant Country',
-						'Registrant Phone',
 						'Registrant Email',
+						'Registrant Phone',
 						'Registrant Phone Ext',
+						'Registrant Phone Ext.',
 						'Registrant Fax',
 						'Registrant Fax Ext',
-						'Registrant Phone Ext.',
 						'Registrant Fax Ext.',
 						'Registrant Application Purpose',
 						'Registrant Nexus Category',
@@ -357,7 +365,9 @@ export default {
 					title: 'Contact - Tech',
 					fields: [
 						'Registry Tech ID',
+						'Tech Contact ID',
 						'Tech Name',
+						'Tech Contact Name',
 						'Tech Organization',
 						'Tech Organisation',
 						'Tech Street',
@@ -451,27 +461,29 @@ export default {
 			this.tabs.push(tabDns)
 
 			// Get Domain status
-			browser.runtime
-				.sendMessage({
-					action: 'fetch',
-					url: `https://api.dmns.app/domain/${this.domain}`,
-				})
-				.then(re => {
-					if (re.error) {
-						throw re.error
-					}
+			const getDomainInfo = () => {
+				browser.runtime
+					.sendMessage({
+						action: 'fetch',
+						url: `https://api.dmns.app/domain/${this.domain}`,
+					})
+					.then(re => {
+						if (re.error) {
+							throw re.error
+						}
 
-					this.domainRoot = re.domain
-					this.data.domain = re
-					tabOverview.status = 'loaded'
-					tabOverview.subtitle = re.status
-					tabOverview.content = re
-				})
-				.catch(err => {
-					tabOverview.status = 'error'
-					tabOverview.subtitle = 'error'
-					tabOverview.content = err
-				})
+						this.domainRoot = re.domain
+						this.data.domain = re
+						tabOverview.status = 'loaded'
+						tabOverview.subtitle = re.availability
+						tabOverview.content = re
+					})
+					.catch(err => {
+						tabOverview.status = 'error'
+						tabOverview.subtitle = 'error'
+						tabOverview.content = err
+					})
+			}
 
 			// Get WHOIS info
 			browser.runtime
@@ -519,6 +531,7 @@ export default {
 					tabWhois.subtitle = 'error'
 					tabWhois.content = err
 				})
+				.finally(getDomainInfo)
 
 			// Get NS info
 			browser.runtime
@@ -610,12 +623,12 @@ export default {
 			return JSON.stringify(data, null, 2)
 		},
 		formatDate(date) {
-			date = new Date(date)
+			date = new Date(date.trim())
 
 			return date.toLocaleDateString()
 		},
 		inDays(date, toDate) {
-			const t1 = new Date(date)
+			const t1 = new Date(date.trim())
 			const t2 = toDate || new Date()
 
 			return Math.round((t1.getTime() - t2.getTime()) / (24 * 3600 * 1000))
@@ -652,56 +665,35 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import '~bootstrap/scss/bootstrap';
-
-a {
-	color: rgb(70, 13, 141);
-}
+@import '~@layered/layered-design';
 
 .app-popup {
 	height: 400px;
 	width: 600px;
 	cursor: default;
 }
-.tabs ul {
-	padding: 0;
-	position: sticky;
-	top: 0;
-	background: #fff;
 
-	li {
-		margin: 1rem 0.5rem 0 0;
-		padding: 5px 8px;
-		display: inline-block;
-		border-radius: 2px;
-		border-bottom: 2px solid rgba(70, 13, 141, 0.2);
-		cursor: pointer;
-		text-align: center;
-	}
-
-	li.error {
+.nav-tabs {
+	.nav-link.error {
 		border-color: #f5c6cb;
 	}
-
-	li.active {
-		border-color: rgba(70, 13, 141, 0.9);
-	}
-
-	li.active.error {
+	.nav-link.active.error {
 		border-color: #721c24;
 	}
 }
+
 .badge {
 	font-size: 90% !important;
 }
 .badge-registered {
-	color: rgb(70, 13, 141);
-	background-color: rgba(70, 13, 141, 0.07);
+	color: $primary;
+	background-color: $primary-lighter;
 }
 .badge-available {
 	color: #004085;
 	background-color: #cce5ff;
 }
+.badge-reserved,
 .badge-unknown {
 	color: #856404;
 	background-color: #fff3cd;

@@ -1,6 +1,6 @@
 {
   "name": "domain-info",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Detailed info about a site's domain, DNS and tech stack",
   "author": "Andrei <andrei@laye.red>",
   "license": "MIT",
@@ -14,12 +14,8 @@
     "watch": "npm run build -- --watch",
     "watch:dev": "cross-env HMR=true npm run build:dev -- --watch"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "pretty-quick --staged"
-    }
-  },
   "dependencies": {
+    "@layered/layered-design": "^1.0.2",
     "blueimp-md5": "^2.12.0",
     "bootstrap": "^4.3.1",
     "vue": "^2.6.10",
@@ -50,7 +46,7 @@
     "eslint-plugin-standard": "^4.0.1",
     "eslint-plugin-vue": "^5.2.2",
     "file-loader": "^4.2.0",
-    "husky": "^3.0.0",
+    "husky": "^3.1.0",
     "mini-css-extract-plugin": "^0.5.0",
     "node-sass": "^4.13.0",
     "prettier": "^1.17.1",
