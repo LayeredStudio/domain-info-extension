@@ -219,7 +219,7 @@
 							<p>
 								Register now with
 								<a :href="'https://domains.google.com/m/registrar/search?searchTerm=' + (domainRoot || domain)" target="_blank">Google Domains</a>,
-								<a :href="'https://porkbun.com/checkout/search?q=' + (domainRoot || domain)" target="_blank">PorkBun</a> or
+								<a :href="'https://porkbun.com/checkout/search?ref=andreiigna&q=' + (domainRoot || domain)" target="_blank">PorkBun</a> or
 								<a :href="'https://www.godaddy.com/domainsearch/find?domainToCheck=' + (domainRoot || domain)" target="_blank">GoDaddy</a>.
 							</p>
 						</div>
@@ -448,10 +448,7 @@ export default {
 				status: 'loading',
 			}
 
-			this.tabs.push(tabOverview)
-			this.tabs.push(tabWhois)
-			this.tabs.push(tabNs)
-			this.tabs.push(tabDns)
+			this.tabs.push(tabOverview, tabWhois, tabNs, tabDns)
 
 			// Get Domain status
 			const getDomainInfo = () => {
@@ -477,6 +474,8 @@ export default {
 						tabOverview.content = err
 					})
 			}
+
+			getDomainInfo()
 
 			// Get WHOIS info
 			browser.runtime
@@ -511,7 +510,7 @@ export default {
 								content: whoisResponse[whoisServer],
 								content2: JSON.parse(JSON.stringify(whoisResponse[whoisServer])),
 							})
-							if (!whoisResponse[whoisServer].error) {
+							if (!whoisResponse[whoisServer].error && whoisResponse[whoisServer]['Domain Name']) {
 								this.data.whoisD = whoisResponse[whoisServer]
 							}
 						}
@@ -524,7 +523,6 @@ export default {
 					tabWhois.subtitle = 'error'
 					tabWhois.content = err
 				})
-				.finally(getDomainInfo)
 
 			// Get NS info
 			browser.runtime
@@ -661,7 +659,7 @@ export default {
 				},
 			}
 
-			return email ? `https://www.gravatar.com/avatar/${md5(email)}?s=50&d=${imgClearbit}` : imgClearbit
+			return mx
 		},
 	},
 }
