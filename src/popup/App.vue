@@ -128,7 +128,7 @@
 						</div>
 					</div>
 					<div v-else-if="tab.title === 'Overview'" class="box">
-						<div class="row mt-1 mb-3">
+						<div class="row mt-2 mb-3">
 							<div class="col-auto text-center">
 								<h4 class="text-capitalize rounded px-2 py-1 mb-1" :class="[`badge-${tab.content.availability}`]">{{ tab.content.availability }}</h4>
 								<span v-if="tab.content.availability === 'registered' && tab.content.registrar.name" class="text-muted">
@@ -186,30 +186,30 @@
 									/>
 								</div>
 								<div class="col">
-									<p class="mb-1 lead">
-										{{
-											Array.from(
-												new Set(
-													[data.whoisD['Registrant Name'], data.whoisD['Registrant Organization'], data.whoisD['Registrant Organisation']].filter(Boolean)
-												)
-											).join(', ') || 'Anonymous'
-										}}
-									</p>
-									<p class="mb-1">
-										{{
-											Array.from(
-												new Set(
-													[
-														data.whoisD['Registrant City'],
-														data.whoisD['Registrant State/Province'],
-														data.whoisD['Registrant State'],
-														data.whoisD['Registrant Country'],
-													].filter(Boolean)
-												)
-											).join(', ')
-										}}
-									</p>
-									<p class="mb-0">{{ Array.from(new Set([data.whoisD['Registrant Phone'], data.whoisD['Registrant Email']].filter(Boolean))).join(', ') }}</p>
+									<p class="mb-1 lead" v-html="uniqueValues([data.whoisD['Registrant Name'], data.whoisD['Registrant Organization']], 'Anonymous')"></p>
+									<p class="mb-1" v-html="uniqueValues([data.whoisD['Registrant City'], data.whoisD['Registrant State/Province'], data.whoisD['Registrant Country']])"></p>
+									<p class="mb-0" v-html="uniqueValues([data.whoisD['Registrant Phone'], data.whoisD['Registrant Email']], 'No contact info found')"></p>
+								</div>
+							</div>
+						</div>
+
+						<div v-if="tab.content.availability === 'registered' && !tab.content.status.includes('inactive')" class="bg-light rounded p-3 mb-3">
+							<div class="row">
+								<div class="col-3">
+									<span class="subtitle text-muted">Name Servers</span>
+								</div>
+								<div class="col">
+									<span v-for="ns in (tab.content.ns.length > 5 ? tab.content.ns.slice(0, 4) : tab.content.ns)" class="badge badge-light text-lowercase mr-1 mb-1">{{ ns }}</span>
+									<span v-if="tab.content.ns.length > 5" class="text-primary cursor-pointer" @click="tabActive = tabs.length - 2">and {{ tab.content.ns.length - 4 }} more</span>
+								</div>
+							</div>
+							<div v-if="data.dns" class="row mt-3">
+								<div class="col-3">
+									<span class="subtitle text-muted">DNS Records</span>
+								</div>
+								<div class="col">
+									<span v-for="dns in (Object.values(data.dns).flat().length > 6 ? [...data.dns.A, ...data.dns.CNAME].slice(0, 5) : [...data.dns.A, ...data.dns.CNAME])" class="badge badge-light text-lowercase mr-1 mb-1">{{ dns.name }}</span>
+									<span v-if="Object.values(data.dns).flat().length > 6" class="text-primary cursor-pointer" @click="tabActive = tabs.length - 1">and {{ Object.values(data.dns).flat().length - 5 }} more</span>
 								</div>
 							</div>
 						</div>
@@ -229,7 +229,11 @@
 					</div>
 				</div>
 				<div v-else-if="tab.status === 'loading'">
-					<p class="text-center">Loading..</p>
+					<div class="d-flex justify-content-center">
+						<div class="spinner-border text-primary my-3" role="status">
+							<span class="sr-only">Loading...</span>
+						</div>
+					</div>
 				</div>
 				<div v-else-if="tab.status === 'error'" class="alert alert-danger">
 					{{ tab.content }}
@@ -589,6 +593,12 @@ export default {
 					tabDns.content = err
 				})
 		},
+		uniqueValues(values, defaultValue) {
+			if (defaultValue) {
+				defaultValue = `<i class="text-muted">${defaultValue}</i>`
+			}
+			return [...new Set(values)].filter(Boolean).join(', ') || defaultValue
+		},
 		isWildcardSubdomain(subdomain) {
 			return subdomain.startsWith('*.')
 		},
@@ -625,7 +635,11 @@ export default {
 		getPicture(email) {
 			const imgClearbit = `https://logo.clearbit.com/${this.domainRoot || this.domain}?size=50`
 
-			return email ? `https://www.gravatar.com/avatar/${md5(email)}?s=50&d=${imgClearbit}` : imgClearbit
+			return email && this.isEmail(email) ? `https://www.gravatar.com/avatar/${md5(email)}?s=50&d=${imgClearbit}` : imgClearbit
+		},
+		isEmail(email) {
+			const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+			return emailRegex.test(email.toLowerCase())
 		},
 		idMX(mx) {
 			const mxServers = {
