@@ -103,7 +103,7 @@
 						</table>
 					</div>
 					<div v-else-if="tab.title === 'WHOIS'">
-						<div v-for="group in whoisGroup" class="bg-light rounded p-2 mb-3" :class="{ 'd-none': !group.found }">
+						<div v-for="group in whoisGroup" class="bg-light rounded p-2 mb-3">
 							<h4>{{ group.title }}</h4>
 
 							<table class="table table-hover">
@@ -116,14 +116,10 @@
 												<p class="mb-1" v-for="contentItem in content">{{ contentItem }}</p>
 											</div>
 										</td>
-										<td v-if="!(delete tab.content2[label] && group.found++)">!</td>
+										<td v-if="!(delete tab.content2[label])">!</td>
 									</tr>
 								</tbody>
 							</table>
-
-							<div v-if="!group.found">
-								<p class="text-muted">No data found..</p>
-							</div>
 						</div>
 
 						<div class="bg-light rounded p-2 mb-3">
@@ -285,7 +281,6 @@ export default {
 						'Error',
 						'ERROR',
 					],
-					found: 0,
 				},
 				{
 					title: 'Registrar',
@@ -309,7 +304,6 @@ export default {
 						'Abuse Contact',
 						'source',
 					],
-					found: 0,
 				},
 				{
 					title: 'Contact - Registrant',
@@ -319,11 +313,9 @@ export default {
 						'Registrant Contact ID',
 						'Registrant Name',
 						'Registrant Organization',
-						'Registrant Organisation',
 						'Registrant Street',
 						'Registrant City',
 						'Registrant State/Province',
-						'Registrant State',
 						'Registrant Postal Code',
 						'Registrant Country',
 						'Registrant Email',
@@ -336,7 +328,6 @@ export default {
 						'Registrant Application Purpose',
 						'Registrant Nexus Category',
 					],
-					found: 0,
 				},
 				{
 					title: 'Contact - Admin',
@@ -360,7 +351,6 @@ export default {
 						'Admin Application Purpose',
 						'Admin Nexus Category',
 					],
-					found: 0,
 				},
 				{
 					title: 'Contact - Tech',
@@ -386,7 +376,6 @@ export default {
 						'Tech Application Purpose',
 						'Tech Nexus Category',
 					],
-					found: 0,
 				},
 				{
 					title: 'Contact - Billing',
@@ -408,7 +397,6 @@ export default {
 						'Billing Phone Ext.',
 						'Billing Fax Ext.',
 					],
-					found: 0,
 				},
 			],
 		}
