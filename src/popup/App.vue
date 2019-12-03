@@ -9,9 +9,10 @@
 		<div v-if="valid">
 			<ul class="nav nav-tabs sticky-top bg-white">
 				<li v-for="(tab, index) in tabs" class="nav-item">
-					<span class="nav-link text-center" :class="{ active: index === tabActive, error: tab.status === 'error' }" @click="tabActive = index">
-						<strong>{{ tab.title }}</strong
-						><br /><small>{{ tab.subtitle || '..' }}</small>
+					<span class="nav-link text-center cursor-pointer" :class="{ active: index === tabActive, error: tab.status === 'error' }" @click="tabActive = index">
+						<strong>{{ tab.title }}</strong>
+						<br />
+						<small>{{ tab.subtitle || '..' }}</small>
 					</span>
 				</li>
 			</ul>
@@ -665,12 +666,76 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import '~@layered/layered-design';
+//@import '~@layered/layered-design';
+
+// Layered Design System variables
+@import '~@layered/layered-design/src/variables';
+
+// Bootstrap files
+
+
+// Configuration
+@import "~bootstrap/scss/functions";
+@import "~bootstrap/scss/variables";
+@import "~bootstrap/scss/mixins";
+
+// Layout & components
+@import "~bootstrap/scss/root";
+@import "~bootstrap/scss/reboot";
+@import "~bootstrap/scss/type";
+@import "~bootstrap/scss/images";
+@import "~bootstrap/scss/code";
+@import "~bootstrap/scss/grid";
+@import "~bootstrap/scss/tables";
+@import "~bootstrap/scss/forms";
+@import "~bootstrap/scss/buttons";
+@import "~bootstrap/scss/transitions";
+// @import "~bootstrap/scss/dropdown";
+// @import "~bootstrap/scss/button-group";
+// @import "~bootstrap/scss/input-group";
+// @import "~bootstrap/scss/custom-forms";
+@import "~bootstrap/scss/nav";
+//@import "~bootstrap/scss/navbar";
+//@import "~bootstrap/scss/card";
+//@import "~bootstrap/scss/breadcrumb";
+//@import "~bootstrap/scss/pagination";
+@import "~bootstrap/scss/badge";
+//@import "~bootstrap/scss/jumbotron";
+@import "~bootstrap/scss/alert";
+//@import "~bootstrap/scss/progress";
+//@import "~bootstrap/scss/media";
+//@import "~bootstrap/scss/list-group";
+//@import "~bootstrap/scss/close";
+//@import "~bootstrap/scss/toasts";
+//@import "~bootstrap/scss/modal";
+@import "~bootstrap/scss/tooltip";
+//@import "~bootstrap/scss/popover";
+//@import "~bootstrap/scss/carousel";
+@import "~bootstrap/scss/spinners";
+@import "~bootstrap/scss/utilities";
+//@import "~bootstrap/scss/print";
+
+
+// Layered Design System overrides
+@import '~@layered/layered-design/src/reboot';
+@import '~@layered/layered-design/src/type';
+@import '~@layered/layered-design/src/images';
+@import '~@layered/layered-design/src/buttons';
+@import '~@layered/layered-design/src/nav';
+//@import '~@layered/layered-design/src/navbar';
+//@import '~@layered/layered-design/src/card';
+//@import '~@layered/layered-design/src/toasts';
+@import '~@layered/layered-design/src/ui-elements';
+
 
 .app-popup {
 	height: 400px;
 	width: 600px;
 	cursor: default;
+}
+
+.cursor-pointer {
+	cursor: pointer;
 }
 
 .nav-tabs {
