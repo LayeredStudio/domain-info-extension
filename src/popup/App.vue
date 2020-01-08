@@ -8,7 +8,7 @@
 
 		<div v-if="valid">
 			<ul class="nav nav-tabs sticky-top bg-white">
-				<li v-for="(tab, index) in tabs" class="nav-item">
+				<li v-for="(tab, index) in tabs" v-bind:key="tab.title" class="nav-item">
 					<span class="nav-link text-center cursor-pointer" :class="{ active: index === tabActive, error: tab.status === 'error' }" @click="tabActive = index">
 						<strong>{{ tab.title }}</strong>
 						<br />
@@ -17,7 +17,7 @@
 				</li>
 			</ul>
 
-			<div v-for="(tab, index) in tabs" v-if="index === tabActive" class="py-2">
+			<div v-for="(tab, index) in tabs" v-bind:key="tab.title" v-if="index === tabActive" class="py-2">
 				<div v-if="tab.status === 'loaded'">
 					<div v-if="tab.title === 'NS'" class="bg-light rounded p-2 mb-3">
 						<table class="table table-hover">
@@ -116,7 +116,7 @@
 												<p class="mb-1" v-for="contentItem in content">{{ contentItem }}</p>
 											</div>
 										</td>
-										<td v-if="!(delete tab.content2[label])">!</td>
+										<td v-if="!delete tab.content2[label]">!</td>
 									</tr>
 								</tbody>
 							</table>
@@ -194,7 +194,18 @@
 						</div>
 
 						<div v-if="tab.content.availability === 'registered' && !tab.content.status.includes('inactive')" class="bg-light rounded p-3 mb-3">
-							<div class="row">
+							<div v-if="data.dnsProviders.length" class="row my-2">
+								<div class="col-3">
+									<span class="subtitle text-muted">DNS provider</span>
+								</div>
+								<div class="col">
+									<a v-for="dnsProvider in data.dnsProviders" :href="dnsProvider.url" class="mr-2" target="_blank">
+										<img :src="dnsProvider.logo" width="14" class="rounded mr-1" alt="DNS provider" />
+										{{ dnsProvider.name }}
+									</a>
+								</div>
+							</div>
+							<div class="row my-2">
 								<div class="col-3">
 									<span class="subtitle text-muted">Name Servers</span>
 								</div>
@@ -203,13 +214,24 @@
 									<span v-if="tab.content.ns.length > 5" class="text-primary cursor-pointer" @click="tabActive = tabs.length - 2">and {{ tab.content.ns.length - 4 }} more</span>
 								</div>
 							</div>
-							<div v-if="data.dns" class="row mt-3">
+							<div v-if="data.dns" class="row my-2">
 								<div class="col-3">
 									<span class="subtitle text-muted">DNS Records</span>
 								</div>
 								<div class="col">
 									<span v-for="dns in (Object.values(data.dns).flat().length > 6 ? [...data.dns.A, ...data.dns.CNAME].slice(0, 5) : [...data.dns.A, ...data.dns.CNAME])" class="badge badge-light text-lowercase mr-1 mb-1">{{ dns.name }}</span>
 									<span v-if="Object.values(data.dns).flat().length > 6" class="text-primary cursor-pointer" @click="tabActive = tabs.length - 1">and {{ Object.values(data.dns).flat().length - 5 }} more</span>
+								</div>
+							</div>
+							<div v-if="data.emailProvider" class="row my-2">
+								<div class="col-3">
+									<span class="subtitle text-muted">Email provider</span>
+								</div>
+								<div class="col">
+									<a :href="data.emailProvider.url" target="_blank">
+										<img :src="data.emailProvider.logo" width="14" class="rounded mr-1" alt="Email provider" />
+										{{ data.emailProvider.name }}
+									</a>
 								</div>
 							</div>
 						</div>
@@ -245,8 +267,8 @@
 </template>
 
 <script>
-console.log = chrome.extension.getBackgroundPage().console.log
 import md5 from 'blueimp-md5'
+console.log = chrome.extension.getBackgroundPage().console.log
 
 export default {
 	data() {
@@ -262,6 +284,8 @@ export default {
 				whoisD: null, // whois server with more details
 				ns: null,
 				dns: null,
+				emailProvider: null,
+				dnsProviders: [],
 			},
 			whoisGroup: [
 				{
@@ -467,6 +491,7 @@ export default {
 						tabOverview.status = 'loaded'
 						tabOverview.subtitle = re.availability
 						tabOverview.content = re
+						this.idDNS(re.ns)
 					})
 					.catch(err => {
 						tabOverview.status = 'error'
@@ -475,13 +500,11 @@ export default {
 					})
 			}
 
-			getDomainInfo()
-
 			// Get WHOIS info
 			browser.runtime
 				.sendMessage({
 					action: 'fetch',
-					url: `https://api.dmns.app/whois/${this.domain}`,
+					url: `https://api.dmns.app/domain/${this.domain}/whois`,
 				})
 				.then(whoisResponse => {
 					if (whoisResponse.error) {
@@ -523,12 +546,13 @@ export default {
 					tabWhois.subtitle = 'error'
 					tabWhois.content = err
 				})
+				.finally(getDomainInfo)
 
 			// Get NS info
 			browser.runtime
 				.sendMessage({
 					action: 'fetch',
-					url: `https://api.dmns.app/name-servers/${this.domain}`,
+					url: `https://api.dmns.app/domain/${this.domain}/name-servers`,
 				})
 				.then(nsResponse => {
 					if (nsResponse.error) {
@@ -546,11 +570,11 @@ export default {
 					tabNs.content = err
 				})
 
-			// Get DNS info
+			// Get DNS records
 			browser.runtime
 				.sendMessage({
 					action: 'fetch',
-					url: `https://api.dmns.app/dns-records/${this.domain}`,
+					url: `https://api.dmns.app/domain/${this.domain}/dns-records`,
 				})
 				.then(dnsResponse => {
 					if (dnsResponse.error) {
@@ -578,6 +602,10 @@ export default {
 						})
 
 						dnsData[recordType] = Object.values(dnsData[recordType])
+					}
+
+					if (dnsData.MX.length) {
+						this.idMX(dnsData.MX[0].value)
 					}
 
 					this.data.dns = dnsData
@@ -639,87 +667,187 @@ export default {
 			const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
 			return emailRegex.test(email.toLowerCase())
 		},
-		idMX(mx) {
+		idMX(mxRecords) {
 			const mxServers = {
 				'emailsrvr.com': {
 					name: 'Rackspace Email',
 					url: 'https://www.rackspace.com/email-hosting/webmail',
+					logo: 'https://www.rackspace.com/themes/custom/rackspace/favicon.ico',
 				},
 				'gmr-smtp-in.l.google.com': {
 					name: 'Gmail',
 					url: 'https://www.google.com/gmail/about/',
+					logo: 'https://logo.clearbit.com/google.com',
 				},
 				'googlemail.com': {
-					name: 'G Suite',
-					url: 'https://gsuite.google.com/products/gmail/',
+					name: 'Google G Suite',
+					url: 'https://refergsuite.app.goo.gl/1WTE',
+					logo: 'https://logo.clearbit.com/google.com',
 				},
 				'google.com': {
-					name: 'G Suite',
-					url: 'https://gsuite.google.com/products/gmail/',
+					name: 'Google G Suite',
+					url: 'https://refergsuite.app.goo.gl/1WTE',
+					logo: 'https://logo.clearbit.com/google.com',
+				},
+				'outlook.com': {
+					name: 'Outlook',
+					url: 'https://products.office.com/en/outlook/email-and-calendar-software-microsoft-outlook',
+					logo: 'https://logo.clearbit.com/microsoft.com',
+				},
+				'secureserver.net': {
+					name: 'GoDaddy',
+					url: 'https://www.godaddy.com/email',
+					logo: 'https://logo.clearbit.com/godaddy.com',
 				},
 			}
 
-			return mx
+			for (const mxServer in mxServers) {
+				mxRecords.forEach(mxRecord => {
+					if (mxRecord.toLowerCase().includes(mxServer)) {
+						this.data.emailProvider = mxServers[mxServer]
+						return true
+					}
+				})
+			}
+
+			return false
+		},
+		idDNS(nsRecords) {
+			let found = []
+			const dnsServers = {
+				'dynect.net': {
+					name: 'Dyn DNS',
+					url: 'https://dyn.com/',
+					logo: 'https://logo.clearbit.com/dyn.com',
+				},
+				'dnsimple.com': {
+					name: 'DNSimple',
+					url: 'https://dnsimple.com/',
+					logo: 'https://logo.clearbit.com/dnsimple.com',
+				},
+				'.awsdns-': {
+					name: 'Amazon Route 53',
+					url: 'https://aws.amazon.com/route53/',
+					logo: 'https://logo.clearbit.com/aws.amazon.com',
+				},
+				'googledomains.com': {
+					name: 'Google Domains',
+					url: 'https://domains.google/',
+					logo: 'https://logo.clearbit.com/domains.google.com',
+				},
+				'google.com': {
+					name: 'Google',
+					url: 'https://google.com/',
+					logo: 'https://logo.clearbit.com/google.com',
+				},
+				'ns.cloudflare.com': {
+					name: 'Cloudflare',
+					url: 'https://cloudflare.com/',
+					logo: 'https://logo.clearbit.com/cloudflare.com',
+				},
+				'dnsowl.com': {
+					name: 'NameSilo',
+					url: 'https://www.namesilo.com/',
+					logo: 'https://logo.clearbit.com/namesilo.com',
+				},
+				'dynadot.com': {
+					name: 'Dynadot',
+					url: 'https://www.dynadot.com/',
+					logo: 'https://logo.clearbit.com/dynadot.com',
+				},
+				'domaincontrol.com': {
+					name: 'GoDaddy',
+					url: 'https://www.godaddy.com/',
+					logo: 'https://logo.clearbit.com/godaddy.com',
+				},
+				'secureserver.net': {
+					name: 'GoDaddy',
+					url: 'https://www.godaddy.com/',
+					logo: 'https://logo.clearbit.com/godaddy.com',
+				},
+				'akam.net': {
+					name: 'Akamai',
+					url: 'https://www.akamai.com/',
+					logo: 'https://logo.clearbit.com/akamai.com',
+				},
+				'nsone.net': {
+					name: 'NS1',
+					url: 'https://ns1.com/',
+					logo: 'https://logo.clearbit.com/ns1.com',
+				},
+				'dnsmadeeasy.com': {
+					name: 'DNS Made Easy',
+					url: 'https://dnsmadeeasy.com/',
+					logo: 'https://logo.clearbit.com/dnsmadeeasy.com',
+				},
+			}
+
+			for (const dnsServer in dnsServers) {
+				nsRecords.forEach(nsRecord => {
+					if (nsRecord.toLowerCase().includes(dnsServer) && !found.includes(dnsServer)) {
+						found.push(dnsServer)
+						this.data.dnsProviders.push(dnsServers[dnsServer])
+					}
+				})
+			}
+
+			return false
 		},
 	},
 }
 </script>
 
 <style lang="scss" scoped>
-//@import '~@layered/layered-design';
-
 // Layered Design System variables
 @import '~@layered/layered-design/src/variables';
 
-// Bootstrap files
-
+// Bootstrap files below
 
 // Configuration
-@import "~bootstrap/scss/functions";
-@import "~bootstrap/scss/variables";
-@import "~bootstrap/scss/mixins";
+@import '~bootstrap/scss/functions';
+@import '~bootstrap/scss/variables';
+@import '~bootstrap/scss/mixins';
 
 // Layout & components
-@import "~bootstrap/scss/root";
-@import "~bootstrap/scss/reboot";
-@import "~bootstrap/scss/type";
-@import "~bootstrap/scss/images";
-@import "~bootstrap/scss/code";
-@import "~bootstrap/scss/grid";
-@import "~bootstrap/scss/tables";
-@import "~bootstrap/scss/forms";
-@import "~bootstrap/scss/buttons";
-@import "~bootstrap/scss/transitions";
+@import '~bootstrap/scss/root';
+@import '~bootstrap/scss/reboot';
+@import '~bootstrap/scss/type';
+//@import '~bootstrap/scss/images';
+//@import '~bootstrap/scss/code';
+@import '~bootstrap/scss/grid';
+@import '~bootstrap/scss/tables';
+//@import '~bootstrap/scss/forms';
+@import '~bootstrap/scss/buttons';
+@import '~bootstrap/scss/transitions';
 // @import "~bootstrap/scss/dropdown";
 // @import "~bootstrap/scss/button-group";
 // @import "~bootstrap/scss/input-group";
 // @import "~bootstrap/scss/custom-forms";
-@import "~bootstrap/scss/nav";
+@import '~bootstrap/scss/nav';
 //@import "~bootstrap/scss/navbar";
 //@import "~bootstrap/scss/card";
 //@import "~bootstrap/scss/breadcrumb";
 //@import "~bootstrap/scss/pagination";
-@import "~bootstrap/scss/badge";
+@import '~bootstrap/scss/badge';
 //@import "~bootstrap/scss/jumbotron";
-@import "~bootstrap/scss/alert";
+@import '~bootstrap/scss/alert';
 //@import "~bootstrap/scss/progress";
 //@import "~bootstrap/scss/media";
 //@import "~bootstrap/scss/list-group";
 //@import "~bootstrap/scss/close";
 //@import "~bootstrap/scss/toasts";
 //@import "~bootstrap/scss/modal";
-@import "~bootstrap/scss/tooltip";
+//@import '~bootstrap/scss/tooltip';
 //@import "~bootstrap/scss/popover";
 //@import "~bootstrap/scss/carousel";
-@import "~bootstrap/scss/spinners";
-@import "~bootstrap/scss/utilities";
+@import '~bootstrap/scss/spinners';
+@import '~bootstrap/scss/utilities';
 //@import "~bootstrap/scss/print";
-
 
 // Layered Design System overrides
 @import '~@layered/layered-design/src/reboot';
 @import '~@layered/layered-design/src/type';
-@import '~@layered/layered-design/src/images';
+//@import '~@layered/layered-design/src/images';
 @import '~@layered/layered-design/src/buttons';
 @import '~@layered/layered-design/src/nav';
 //@import '~@layered/layered-design/src/navbar';
@@ -727,15 +855,10 @@ export default {
 //@import '~@layered/layered-design/src/toasts';
 @import '~@layered/layered-design/src/ui-elements';
 
-
 .app-popup {
 	height: 400px;
 	width: 600px;
 	cursor: default;
-}
-
-.cursor-pointer {
-	cursor: pointer;
 }
 
 .nav-tabs {
