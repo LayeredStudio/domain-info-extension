@@ -237,12 +237,23 @@
 						</div>
 
 						<div v-if="tab.content.availability === 'available'" class="bg-light rounded p-3 mb-3">
-							<p class="lead">Great news, this domain is available for registration!</p>
+							<p class="lead"><strong>{{ domainRoot || domain }}</strong> is available to register:</p>
 							<p>
-								Register now with
-								<a :href="'https://domains.google.com/m/registrar/search?searchTerm=' + (domainRoot || domain)" target="_blank">Google Domains</a>,
-								<a :href="'https://porkbun.com/checkout/search?ref=andreiigna&q=' + (domainRoot || domain)" target="_blank">PorkBun</a> or
-								<a :href="'https://www.godaddy.com/domainsearch/find?domainToCheck=' + (domainRoot || domain)" target="_blank">GoDaddy</a>.
+								<a :href="'https://domains.google.com/m/registrar/search?searchTerm=' + (domainRoot || domain)" class="btn btn-sm btn-outline-primary mx-1" target="_blank">Google Domains</a>
+								<a :href="'https://porkbun.com/checkout/search?ref=andreiigna&q=' + (domainRoot || domain)" class="btn btn-sm btn-outline-primary mx-1" target="_blank">PorkBun</a>
+								<a :href="'https://www.name.com/domain/search/' + (domainRoot || domain)" class="btn btn-sm btn-outline-primary mx-1" target="_blank">Name.com</a>
+								<a :href="'https://www.namecheap.com/domains/registration/results/?domain=' + (domainRoot || domain)" class="btn btn-sm btn-outline-primary mx-1" target="_blank">Namecheap</a>
+							</p>
+						</div>
+
+						<div class="bg-light rounded p-3 mb-3">
+							<h5 class="subtitle">Other TLDs for {{ domainRoot || domain }}</h5>
+
+							<p class="mb-0">
+								<a v-for="tld in tlds" :href="'http://' + data.domain.keyword + '.' + tld.tld" v-bind:key="tld.tld" class="btn btn-sm mx-1" target="_blank" :class="{'btn-outline-primary': tld.status === 'available', 'btn-outline-secondary': !['available'].includes(tld.status)}">
+									<span v-if="tld.status === 'loading'">.{{ tld.tld }} <div class="spinner-border spinner-border-sm" role="status"></div></span>
+									<span v-else>.{{ tld.tld }} - {{ tld.status }}</span>
+								</a>
 							</p>
 						</div>
 					</div>
@@ -278,6 +289,7 @@ export default {
 			valid: false,
 			tabs: [],
 			tabActive: 0,
+			tlds: {},
 			data: {
 				domain: null,
 				whois: null,
@@ -443,6 +455,7 @@ export default {
 	},
 	methods: {
 		loadInfo() {
+			const tldsToCheck = ['com', 'net', 'org', 'co']
 			const tabOverview = {
 				title: 'Overview',
 				subtitle: '',
@@ -492,6 +505,32 @@ export default {
 						tabOverview.subtitle = re.availability
 						tabOverview.content = re
 						this.idDNS(re.ns)
+
+						// check other TLDs
+						tldsToCheck.forEach(tld => {
+							if (tld !== re.tld) {
+								this.tlds[tld] = {
+									tld,
+									status: 'loading',
+								}
+
+								browser.runtime
+									.sendMessage({
+										action: 'fetch',
+										url: `https://api.dmns.app/domain/${re.keyword}.${tld}`,
+									})
+									.then(tldResponse => {
+										if (re.error) {
+											throw re.error
+										}
+										this.$set(this.tlds[tld], 'status', tldResponse.availability)
+									})
+									.catch(err => {
+										this.tlds[tld].status = 'error'
+									})
+							}
+						})
+
 					})
 					.catch(err => {
 						tabOverview.status = 'error'
@@ -697,7 +736,7 @@ export default {
 				'secureserver.net': {
 					name: 'GoDaddy',
 					url: 'https://www.godaddy.com/email',
-					logo: 'https://logo.clearbit.com/godaddy.com',
+					logo: 'https://img1.wsimg.com/ux/favicon/favicon-96x96.png',
 				},
 			}
 
@@ -758,12 +797,12 @@ export default {
 				'domaincontrol.com': {
 					name: 'GoDaddy',
 					url: 'https://www.godaddy.com/',
-					logo: 'https://logo.clearbit.com/godaddy.com',
+					logo: 'https://img1.wsimg.com/ux/favicon/favicon-96x96.png',
 				},
 				'secureserver.net': {
 					name: 'GoDaddy',
 					url: 'https://www.godaddy.com/',
-					logo: 'https://logo.clearbit.com/godaddy.com',
+					logo: 'https://img1.wsimg.com/ux/favicon/favicon-96x96.png',
 				},
 				'akam.net': {
 					name: 'Akamai',
@@ -779,6 +818,11 @@ export default {
 					name: 'DNS Made Easy',
 					url: 'https://dnsmadeeasy.com/',
 					logo: 'https://logo.clearbit.com/dnsmadeeasy.com',
+				},
+				'.ultradns.': {
+					name: 'Neustar DNS',
+					url: 'https://www.home.neustar/dns-services',
+					logo: 'https://logo.clearbit.com/home.neustar',
 				},
 			}
 
