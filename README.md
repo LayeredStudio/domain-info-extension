@@ -19,6 +19,7 @@ Domain Info extension/add-on
 To make any changes or just build from source, follow these steps:
 - On any OS, [install Node.js and npm](https://www.npmjs.com/get-npm)
 - Download or clone source code, then navigate to directory
+- Run command `npm install` to install all dependencies
 - Make your changes!
 - Run command `npm run build` to build the final files in `dist` directory
 - Run command `npm run build-zip` to put final files in a zip archive 
