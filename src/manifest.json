@@ -1,13 +1,13 @@
 {
   "name": "Domain info",
   "description": "Shows really detailed info about a domain, like registration status & dates, WHOIS, Name Servers and DNS records",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "manifest_version": 2,
   "icons": {
     "48": "icons/icon_48.png",
     "128": "icons/icon_128.png"
   },
-  "permissions": ["declarativeContent", "tabs"],
+  "permissions": ["activeTab"],
   "browser_action": {
     "default_title": "domain-info",
     "default_popup": "popup/popup.html"

@@ -1,6 +1,6 @@
 {
   "name": "domain-info",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Detailed info about a site's domain, DNS and tech stack",
   "author": "Andrei <andrei@laye.red>",
   "license": "MIT",
