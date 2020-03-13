@@ -12,8 +12,8 @@ Domain Info extension/add-on
 * Does not track or record any user data, all code used is open source
 
 ## Install and use it
-- Google Chrome - [Install from Chrome Web Store](https://chrome.google.com/webstore/detail/afbepfhknfficaflckmgflbmklcleidl)
-- Firefox - coming soon
+- Google Chrome - [Install from Chrome Web Store](https://chrome.google.com/webstore/detail/domain-info/afbepfhknfficaflckmgflbmklcleidl)
+- Firefox - [Install from Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/domain-info/)
 
 ## Dev & contributing
 To make any changes or just build from source, follow these steps:
