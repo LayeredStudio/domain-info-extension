@@ -174,11 +174,11 @@
 							</div>
 						</div>
 
-						<div v-if="tab.content.availability === 'registered' && data.whoisD" class="bg-light rounded p-3 mb-3">
+						<div v-if="tab.content.availability === 'registered'" class="bg-light rounded p-3 mb-3">
 							<div class="row align-items-center">
 								<div class="col-auto">
 									<img
-										:src="getPicture(data.whoisD['Registrant Email'] || '')"
+										:src="getPicture(tab.content.registrant.email || '')"
 										@error="$event.target.src = 'https://files.layered.market/neutral-2.png'"
 										width="50"
 										class="rounded"
@@ -186,32 +186,32 @@
 									/>
 								</div>
 								<div class="col">
-									<p class="mb-1 lead" v-html="uniqueValues([data.whoisD['Registrant Name'], data.whoisD['Registrant Organization']], 'Anonymous')"></p>
-									<p class="mb-1" v-html="uniqueValues([data.whoisD['Registrant City'], data.whoisD['Registrant State/Province'], data.whoisD['Registrant Country']])"></p>
-									<p class="mb-0" v-html="uniqueValues([data.whoisD['Registrant Phone'], data.whoisD['Registrant Email']], 'No contact info found')"></p>
+									<p class="mb-1 lead" v-html="uniqueValues([tab.content.registrant.name, tab.content.registrant.organization], 'Anonymous')"></p>
+									<p class="mb-1" v-html="uniqueValues([tab.content.registrant.city, tab.content.registrant.stateOrProvince, tab.content.registrant.country])"></p>
+									<p class="mb-0" v-html="uniqueValues([tab.content.registrant.phone, tab.content.registrant.email], 'No contact info found')"></p>
 								</div>
 							</div>
 						</div>
 
 						<div v-if="tab.content.availability === 'registered' && !tab.content.status.includes('inactive')" class="bg-light rounded p-3 mb-3">
-							<div v-if="data.dnsProviders.length" class="row my-2">
-								<div class="col-3">
-									<span class="subtitle text-muted">DNS provider</span>
-								</div>
-								<div class="col">
-									<a v-for="dnsProvider in data.dnsProviders" :href="dnsProvider.url" class="mr-2" target="_blank">
-										<img :src="dnsProvider.logo" width="14" class="rounded mr-1" alt="DNS provider" />
-										{{ dnsProvider.name }}
-									</a>
-								</div>
-							</div>
 							<div class="row my-2">
 								<div class="col-3">
 									<span class="subtitle text-muted">Name Servers</span>
 								</div>
 								<div class="col">
-									<span v-for="ns in (tab.content.ns.length > 5 ? tab.content.ns.slice(0, 4) : tab.content.ns)" class="badge badge-light text-lowercase mr-1 mb-1">{{ ns }}</span>
-									<span v-if="tab.content.ns.length > 5" class="text-primary cursor-pointer" @click="tabActive = tabs.length - 2">and {{ tab.content.ns.length - 4 }} more</span>
+									<span v-for="ns in (tab.content.ns.length > 5 ? tab.content.ns.slice(0, 4) : tab.content.ns)" class="badge badge-light-secondary text-lowercase mr-1 mb-1">{{ ns }}</span>
+									<small v-if="tab.content.ns.length > 5" class="text-primary cursor-pointer" @click="tabActive = tabs.length - 3">and {{ tab.content.ns.length - 4 }} more</small>
+								</div>
+							</div>
+							<div v-if="tab.content.services.dns.length" class="row my-2">
+								<div class="col-3">
+									<span class="subtitle text-muted">DNS provider</span>
+								</div>
+								<div class="col">
+									<a v-for="dnsProvider in tab.content.services.dns" :key="dnsProvider.name" :href="dnsProvider.url" class="mr-2" target="_blank">
+										<img :src="dnsProvider.logo" width="14" class="rounded mr-1" alt="DNS provider" />
+										{{ dnsProvider.name }}
+									</a>
 								</div>
 							</div>
 							<div v-if="data.dns" class="row my-2">
@@ -239,10 +239,7 @@
 						<div v-if="tab.content.availability === 'available'" class="bg-light rounded p-3 mb-3">
 							<p class="lead"><strong>{{ domainRoot || domain }}</strong> is available to register:</p>
 							<p>
-								<a :href="'https://domains.google.com/m/registrar/search?searchTerm=' + (domainRoot || domain)" class="btn btn-sm btn-outline-primary mx-1" target="_blank">Google Domains</a>
-								<a :href="'https://porkbun.com/checkout/search?ref=andreiigna&q=' + (domainRoot || domain)" class="btn btn-sm btn-outline-primary mx-1" target="_blank">PorkBun</a>
-								<a :href="'https://www.name.com/domain/search/' + (domainRoot || domain)" class="btn btn-sm btn-outline-primary mx-1" target="_blank">Name.com</a>
-								<a :href="'https://www.namecheap.com/domains/registration/results/?domain=' + (domainRoot || domain)" class="btn btn-sm btn-outline-primary mx-1" target="_blank">Namecheap</a>
+								<a v-for="buy in tab.content.services.buy" :key="buy.name" :href="buy.url" class="btn btn-outline-primary mx-1" target="_blank">{{ buy.name }}</a>
 							</p>
 						</div>
 
@@ -293,7 +290,6 @@ export default {
 			data: {
 				domain: null,
 				whois: null,
-				whoisD: null, // whois server with more details
 				ns: null,
 				dns: null,
 				emailProvider: null,
@@ -467,7 +463,6 @@ export default {
 				title: 'WHOIS',
 				subtitle: '',
 				content: 'loading WHOIS',
-				content2: 'loading WHOIS',
 				status: 'loading',
 			}
 
@@ -485,107 +480,57 @@ export default {
 				status: 'loading',
 			}
 
-			this.tabs.push(tabOverview, tabWhois, tabNs, tabDns)
-
-			// Get Domain status
-			const getDomainInfo = () => {
-				browser.runtime
-					.sendMessage({
-						action: 'fetch',
-						url: `https://api.dmns.app/domain/${this.domain}`,
-					})
-					.then(re => {
-						if (re.error) {
-							throw re.error
-						}
-
-						this.domainRoot = re.domain
-						this.data.domain = re
-						tabOverview.status = 'loaded'
-						tabOverview.subtitle = re.availability
-						tabOverview.content = re
-						this.idDNS(re.ns)
-
-						// check other TLDs
-						tldsToCheck.forEach(tld => {
-							if (tld !== re.tld) {
-								this.tlds[tld] = {
-									tld,
-									status: 'loading',
-								}
-
-								browser.runtime
-									.sendMessage({
-										action: 'fetch',
-										url: `https://api.dmns.app/domain/${re.keyword}.${tld}`,
-									})
-									.then(tldResponse => {
-										if (re.error) {
-											throw re.error
-										}
-										this.$set(this.tlds[tld], 'status', tldResponse.availability)
-									})
-									.catch(err => {
-										this.tlds[tld].status = 'error'
-									})
-							}
-						})
-
-					})
-					.catch(err => {
-						tabOverview.status = 'error'
-						tabOverview.subtitle = 'error'
-						tabOverview.content = err
-					})
 			}
 
 			// Get WHOIS info
 			browser.runtime
 				.sendMessage({
 					action: 'fetch',
-					url: `https://api.dmns.app/domain/${this.domain}/whois`,
+					url: `https://api.dmns.app/domain/${this.domain}?detailed=1`,
 				})
-				.then(whoisResponse => {
-					if (whoisResponse.error) {
-						throw whoisResponse.error
+				.then(re => {
+					if (re.error) {
+						throw re.error
 					}
 
-					let i = 0
-					this.data.whois = whoisResponse
+					// add domain info
+					this.domainRoot = re.domain
+					this.data.domain = re
+					tabOverview.status = 'loaded'
+					tabOverview.subtitle = re.availability
+					tabOverview.content = re
 
-					Object.keys(whoisResponse).forEach(whoisServer => {
+					// add whois data
+					this.data.whois = re.whois
+					let i = 0
+					Object.keys(this.data.whois).forEach(whoisServer => {
 						if (i === 0) {
 							tabWhois.status = 'loaded'
 							tabWhois.subtitle = whoisServer
-							tabWhois.content = whoisResponse[whoisServer]
-							tabWhois.content2 = JSON.parse(JSON.stringify(whoisResponse[whoisServer]))
-							this.data.whoisD = whoisResponse[whoisServer]
-
-							if (whoisResponse[whoisServer]['Domain Name']) {
-								this.domainRoot = whoisResponse[whoisServer]['Domain Name'].toLowerCase()
-							}
+							tabWhois.whoisType = 'Registry'
+							tabWhois.content = this.data.whois[whoisServer]
 						} else {
 							this.tabs.splice(i + 1, 0, {
 								status: 'loaded',
 								title: 'WHOIS',
 								subtitle: whoisServer,
-								content: whoisResponse[whoisServer],
-								content2: JSON.parse(JSON.stringify(whoisResponse[whoisServer])),
+								whoisType: 'Registrar',
+								content: this.data.whois[whoisServer],
 							})
-							if (!whoisResponse[whoisServer].error && whoisResponse[whoisServer]['Domain Name']) {
-								this.data.whoisD = whoisResponse[whoisServer]
-							}
 						}
 
 						i++
 					})
 				})
 				.catch(err => {
+					tabOverview.status = 'error'
+					tabOverview.subtitle = 'error'
+					tabOverview.content = err
+
 					tabWhois.status = 'error'
 					tabWhois.subtitle = 'error'
 					tabWhois.content = err
 				})
-				.finally(getDomainInfo)
 
 			// Get NS info
 			browser.runtime
@@ -745,92 +690,6 @@ export default {
 					if (mxRecord.toLowerCase().includes(mxServer)) {
 						this.data.emailProvider = mxServers[mxServer]
 						return true
-					}
-				})
-			}
-
-			return false
-		},
-		idDNS(nsRecords) {
-			let found = []
-			const dnsServers = {
-				'dynect.net': {
-					name: 'Dyn DNS',
-					url: 'https://dyn.com/',
-					logo: 'https://logo.clearbit.com/dyn.com',
-				},
-				'dnsimple.com': {
-					name: 'DNSimple',
-					url: 'https://dnsimple.com/',
-					logo: 'https://logo.clearbit.com/dnsimple.com',
-				},
-				'.awsdns-': {
-					name: 'Amazon Route 53',
-					url: 'https://aws.amazon.com/route53/',
-					logo: 'https://logo.clearbit.com/aws.amazon.com',
-				},
-				'googledomains.com': {
-					name: 'Google Domains',
-					url: 'https://domains.google/',
-					logo: 'https://logo.clearbit.com/domains.google.com',
-				},
-				'google.com': {
-					name: 'Google',
-					url: 'https://google.com/',
-					logo: 'https://logo.clearbit.com/google.com',
-				},
-				'ns.cloudflare.com': {
-					name: 'Cloudflare',
-					url: 'https://cloudflare.com/',
-					logo: 'https://logo.clearbit.com/cloudflare.com',
-				},
-				'dnsowl.com': {
-					name: 'NameSilo',
-					url: 'https://www.namesilo.com/',
-					logo: 'https://logo.clearbit.com/namesilo.com',
-				},
-				'dynadot.com': {
-					name: 'Dynadot',
-					url: 'https://www.dynadot.com/',
-					logo: 'https://logo.clearbit.com/dynadot.com',
-				},
-				'domaincontrol.com': {
-					name: 'GoDaddy',
-					url: 'https://www.godaddy.com/',
-					logo: 'https://img1.wsimg.com/ux/favicon/favicon-96x96.png',
-				},
-				'secureserver.net': {
-					name: 'GoDaddy',
-					url: 'https://www.godaddy.com/',
-					logo: 'https://img1.wsimg.com/ux/favicon/favicon-96x96.png',
-				},
-				'akam.net': {
-					name: 'Akamai',
-					url: 'https://www.akamai.com/',
-					logo: 'https://logo.clearbit.com/akamai.com',
-				},
-				'nsone.net': {
-					name: 'NS1',
-					url: 'https://ns1.com/',
-					logo: 'https://logo.clearbit.com/ns1.com',
-				},
-				'dnsmadeeasy.com': {
-					name: 'DNS Made Easy',
-					url: 'https://dnsmadeeasy.com/',
-					logo: 'https://logo.clearbit.com/dnsmadeeasy.com',
-				},
-				'.ultradns.': {
-					name: 'Neustar DNS',
-					url: 'https://www.home.neustar/dns-services',
-					logo: 'https://logo.clearbit.com/home.neustar',
-				},
-			}
-
-			for (const dnsServer in dnsServers) {
-				nsRecords.forEach(nsRecord => {
-					if (nsRecord.toLowerCase().includes(dnsServer) && !found.includes(dnsServer)) {
-						found.push(dnsServer)
-						this.data.dnsProviders.push(dnsServers[dnsServer])
 					}
 				})
 			}
