@@ -15,8 +15,8 @@
     "watch:dev": "cross-env HMR=true npm run build:dev -- --watch"
   },
   "dependencies": {
-    "@layered/layered-design": "^1.0.7",
     "blueimp-md5": "^2.12.0",
+    "@layered/layered-design": "^1.3.0",
     "vue": "^2.6.11",
     "webextension-polyfill": "^0.6.0"
   },

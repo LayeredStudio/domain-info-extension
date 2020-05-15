@@ -23,14 +23,12 @@
 						<table class="table table-hover">
 							<thead>
 								<tr>
-									<th>NameServer</th>
+									<th>Name server</th>
 									<th>SOA Serial</th>
 									<th>IP</th>
 									<th>Response Time</th>
-									<!--
 									<th>Location</th>
 									<th>ISP</th>
-									-->
 								</tr>
 							</thead>
 							<tbody>
@@ -51,10 +49,8 @@
 											<span v-else class="text-muted">couldn't get</span>
 										</p>
 									</td>
-									<!--
 									<td>..</td>
 									<td>..</td>
-									-->
 								</tr>
 							</tbody>
 						</table>
@@ -103,12 +99,15 @@
 						</table>
 					</div>
 					<div v-else-if="tab.title === 'WHOIS'">
+
+						<p class="text-muted">This info was returned by {{ tab.whoisType }} WHOIS server <span class="badge badge-light-secondary">{{ tab.subtitle }}</span> and lightly formatted to be easier to read.</p>
+
 						<div v-for="group in whoisGroup" class="bg-light rounded p-2 mb-3">
 							<h4>{{ group.title }}</h4>
 
 							<table class="table table-hover">
 								<tbody>
-									<tr v-for="(content, label) in tab.content" v-if="group.fields.includes(label)">
+									<tr v-for="(content, label) in tab.content" :key="label" v-if="group.fields.includes(label)">
 										<th>{{ label }}</th>
 										<td>
 											<div v-if="typeof content === 'string'">{{ content }}</div>
@@ -116,21 +115,33 @@
 												<p class="mb-1" v-for="contentItem in content">{{ contentItem }}</p>
 											</div>
 										</td>
-										<td v-if="!delete tab.content2[label]">!</td>
 									</tr>
 								</tbody>
 							</table>
 						</div>
 
 						<div class="bg-light rounded p-2 mb-3">
-							<h4>WHOIS Info</h4>
-							<pre>{{ toJson(tab.content2) }}</pre>
+							<h4>Other WHOIS info</h4>
+
+							<table class="table table-hover">
+								<tbody>
+									<tr v-for="(content, label) in tab.content" :key="label" v-show="!whoisGroupFields.includes(label)">
+										<th>{{ label }}</th>
+										<td>
+											<div v-if="typeof content === 'string'">{{ content }}</div>
+											<div v-else>
+												<p class="mb-1" v-for="(contentItem, index) in content" :key="index">{{ contentItem }}</p>
+											</div>
+										</td>
+									</tr>
+								</tbody>
+							</table>
 						</div>
 					</div>
 					<div v-else-if="tab.title === 'Overview'" class="box">
-						<div class="row mt-2 mb-3">
+						<div class="row mb-3">
 							<div class="col-auto text-center">
-								<h4 class="text-capitalize rounded px-2 py-1 mb-1" :class="[`badge-${tab.content.availability}`]">{{ tab.content.availability }}</h4>
+								<h4 class="text-capitalize rounded px-2 py-1 mb-1" :class="[badgeAvailability[tab.content.availability]]">{{ tab.content.availability }}</h4>
 								<span v-if="tab.content.availability === 'registered' && tab.content.registrar.name" class="text-muted">
 									at
 									<a v-if="tab.content.registrar.url" target="_blank" :href="tab.content.registrar.url">{{ tab.content.registrar.name }}</a>
@@ -138,7 +149,7 @@
 								</span>
 							</div>
 							<div class="col">
-								<span v-for="status in tab.content.status" class="badge badge-light m-1">{{ status }}</span>
+								<span v-for="status in tab.content.status" class="badge badge-light-secondary m-1">{{ status }}</span>
 							</div>
 						</div>
 
@@ -163,11 +174,11 @@
 										<strong v-if="tab.content.dates.expiry">{{ formatDate(tab.content.dates.expiry) }}</strong>
 										<i v-if="!tab.content.dates.expiry" class="text-muted"><small>unknown</small></i>
 									</p>
-									<p v-if="tab.content.dates.expiry && inDays(tab.content.dates.expiry) >= 0" class="text-uppercase text-muted mb-0">
-										Expires in {{ inDays(tab.content.dates.expiry) }} days
+									<p v-if="tab.content.dates.expiry && tab.content.dates.expiryDays >= 0" class="text-uppercase text-muted mb-0">
+										Expires in {{ tab.content.dates.expiryDays }} days
 									</p>
-									<p v-else-if="tab.content.dates.expiry && inDays(tab.content.dates.expiry) < 0" class="text-uppercase text-muted mb-0">
-										Expired <span class="badge badge-warning">{{ inDays(tab.content.dates.expiry) * -1 }} days ago</span>
+									<p v-else-if="tab.content.dates.expiry && tab.content.dates.expiryDays < 0" class="text-uppercase text-muted mb-0">
+										Expired <span class="badge badge-warning">{{ tab.content.dates.expiryDays * -1 }} days ago</span>
 									</p>
 									<p v-else class="text-uppercase text-muted mb-0">Expires</p>
 								</div>
@@ -219,8 +230,8 @@
 									<span class="subtitle text-muted">DNS Records</span>
 								</div>
 								<div class="col">
-									<span v-for="dns in (Object.values(data.dns).flat().length > 6 ? [...data.dns.A, ...data.dns.CNAME].slice(0, 5) : [...data.dns.A, ...data.dns.CNAME])" class="badge badge-light text-lowercase mr-1 mb-1">{{ dns.name }}</span>
-									<span v-if="Object.values(data.dns).flat().length > 6" class="text-primary cursor-pointer" @click="tabActive = tabs.length - 1">and {{ Object.values(data.dns).flat().length - 5 }} more</span>
+									<span v-for="dns in (Object.values(data.dns).flat().length > 6 ? [...data.dns.A, ...data.dns.CNAME].slice(0, 5) : [...data.dns.A, ...data.dns.CNAME])" class="badge badge-light-secondary text-lowercase mr-1 mb-1">{{ dns.name }}</span>
+									<small v-if="Object.values(data.dns).flat().length > 6" class="text-primary cursor-pointer" @click="tabActive = tabs.length - 2">and {{ Object.values(data.dns).flat().length - 5 }} more</small>
 								</div>
 							</div>
 							<div v-if="data.emailProvider" class="row my-2">
@@ -294,6 +305,12 @@ export default {
 				dns: null,
 				emailProvider: null,
 				dnsProviders: [],
+			},
+			badgeAvailability: {
+				available: 'badge-light-success',
+				registered: 'badge-light-info',
+				reserved: 'badge-light-secondary',
+				unknown: 'badge-light-warning',
 			},
 			whoisGroup: [
 				{
@@ -438,7 +455,7 @@ export default {
 		}
 	},
 	created() {
-		const allowedProtocols = ['http:', 'https:']
+		const allowedProtocols = ['http:', 'https:', 'ftp:']
 
 		chrome.tabs.query({ active: true, lastFocusedWindow: true }, tabs => {
 			const url = new URL(tabs[0].url)
@@ -448,6 +465,11 @@ export default {
 
 			if (this.valid) this.loadInfo()
 		})
+	},
+	computed: {
+		whoisGroupFields() {
+			return this.whoisGroup.map(g => g.fields).flat()
+		},
 	},
 	methods: {
 		loadInfo() {
@@ -462,6 +484,7 @@ export default {
 			const tabWhois = {
 				title: 'WHOIS',
 				subtitle: '',
+				whoisType: '',
 				content: 'loading WHOIS',
 				status: 'loading',
 			}
@@ -594,7 +617,7 @@ export default {
 
 					this.data.dns = dnsData
 					tabDns.status = 'loaded'
-					tabDns.subtitle = dnsResponse.NS[0].value
+					tabDns.subtitle = `${Object.values(dnsResponse).flat().length} found`
 					tabDns.content = JSON.stringify(dnsResponse, null, 2)
 				})
 				.catch(err => {
@@ -636,20 +659,14 @@ export default {
 
 			return date.toLocaleDateString()
 		},
-		inDays(date, toDate) {
-			const t1 = new Date(date.trim())
-			const t2 = toDate || new Date()
-
-			return Math.round((t1.getTime() - t2.getTime()) / (24 * 3600 * 1000))
-		},
 		getPicture(email) {
 			const imgClearbit = `https://logo.clearbit.com/${this.domainRoot || this.domain}?size=50`
 
-			return email && this.isEmail(email) ? `https://www.gravatar.com/avatar/${md5(email)}?s=50&d=${imgClearbit}` : imgClearbit
+			return this.isEmail(email) ? `https://www.gravatar.com/avatar/${md5(email)}?s=50&d=${imgClearbit}` : imgClearbit
 		},
 		isEmail(email) {
-			const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-			return emailRegex.test(email.toLowerCase())
+			const emailRegex = /\S+@\S+\.\S+/
+			return email && emailRegex.test(email.toLowerCase())
 		},
 		idMX(mxRecords) {
 			const mxServers = {
@@ -751,6 +768,7 @@ export default {
 @import '~@layered/layered-design/src/reboot';
 @import '~@layered/layered-design/src/type';
 //@import '~@layered/layered-design/src/images';
+@import '~@layered/layered-design/src/badge';
 @import '~@layered/layered-design/src/buttons';
 @import '~@layered/layered-design/src/nav';
 //@import '~@layered/layered-design/src/navbar';
@@ -759,9 +777,14 @@ export default {
 @import '~@layered/layered-design/src/ui-elements';
 
 .app-popup {
-	height: 400px;
-	width: 600px;
+	height: 500px;
+	width: 700px;
 	cursor: default;
+	font-size: 120%;
+}
+
+.opacity-0 {
+	opacity: 0;
 }
 
 .nav-tabs {
@@ -773,21 +796,9 @@ export default {
 	}
 }
 
-.badge {
-	font-size: 90% !important;
 }
-.badge-registered {
-	color: $primary;
-	background-color: $primary-lighter;
 }
-.badge-available {
-	color: #004085;
-	background-color: #cce5ff;
 }
-.badge-reserved,
-.badge-unknown {
-	color: #856404;
-	background-color: #fff3cd;
 }
 
 .ttl {
