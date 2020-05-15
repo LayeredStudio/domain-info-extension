@@ -7,8 +7,8 @@
 		</h2>
 
 		<div v-if="valid">
-			<ul class="nav nav-tabs sticky-top bg-white">
-				<li v-for="(tab, index) in tabs" v-bind:key="tab.title" class="nav-item">
+			<ul class="nav nav-tabs sticky-top bg-white mb-2">
+				<li v-for="(tab, index) in tabs" :key="index" class="nav-item" :class="{ 'opacity-0' : tab.title === 'History' && index !== tabActive }">
 					<span class="nav-link text-center cursor-pointer" :class="{ active: index === tabActive, error: tab.status === 'error' }" @click="tabActive = index">
 						<strong>{{ tab.title }}</strong>
 						<br />
@@ -51,6 +51,39 @@
 									</td>
 									<td>..</td>
 									<td>..</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					<div v-else-if="tab.title === 'History'" class="bg-light rounded p-2 mb-3">
+						<table class="table">
+							<thead>
+								<tr>
+									<th>When</th>
+									<!--<th>Type</th>-->
+									<th>Data</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr v-for="activity in data.history" :key="activity.id">
+									<td>{{ formatDate(activity.created_at) }}</td>
+									<!--<td>{{ activity.type }}</td>-->
+									<td>
+										<div class="mb-1" v-for="(item, index) in activity.data" :key="index">
+											<div v-if="item.kind === 'E'">
+												<p class="bg-diff-line-deleted px-2 mb-0">{{ item.path.slice(1).join(', ') }}: <span class="bg-diff-deleted px-1">{{ item.lhs }}</span></p>
+												<p class="bg-diff-line-new px-2 mb-2">{{ item.path.slice(1).join(', ') }}: <span class="bg-diff-new px-1">{{ item.rhs }}</span></p>
+											</div>
+
+											<p v-else-if="item.kind === 'D'" class="bg-diff-line-deleted px-2 mb-2">{{ item.path.slice(1).join(', ') }}: {{ item.lhs }}</p>
+											<p v-else-if="item.kind === 'A' && item.item.kind === 'D'" class="bg-diff-line-deleted px-2 mb-2">{{ item.path.slice(1).join(', ') }}, {{ item.index }}: {{ item.item.lhs }}</p>
+
+											<p v-else-if="item.kind === 'N'" class="bg-diff-line-new px-2 mb-2">{{ item.path.slice(1).join(', ') }}: {{ item.rhs }}</p>
+											<p v-else-if="item.kind === 'A' && item.item.kind === 'N'" class="bg-diff-line-new px-2 mb-2">{{ item.path.slice(1).join(', ') }}, {{ item.index }}: {{ item.item.rhs }}</p>
+											
+											<span v-else>{{ item }}</span>
+										</div>
+									</td>
 								</tr>
 							</tbody>
 						</table>
@@ -255,14 +288,12 @@
 						</div>
 
 						<div class="bg-light rounded p-3 mb-3">
-							<h5 class="subtitle">Other TLDs for {{ domainRoot || domain }}</h5>
+							<h6>Other TLDs for "{{ data.domain.keyword }}" keyword</h6>
 
-							<p class="mb-0">
-								<a v-for="tld in tlds" :href="'http://' + data.domain.keyword + '.' + tld.tld" v-bind:key="tld.tld" class="btn btn-sm mx-1" target="_blank" :class="{'btn-outline-primary': tld.status === 'available', 'btn-outline-secondary': !['available'].includes(tld.status)}">
-									<span v-if="tld.status === 'loading'">.{{ tld.tld }} <div class="spinner-border spinner-border-sm" role="status"></div></span>
-									<span v-else>.{{ tld.tld }} - {{ tld.status }}</span>
-								</a>
-							</p>
+							<a v-for="tld in tlds" :href="'https://dmns.app/domains/' + data.domain.keyword + '.' + tld.tld" :key="tld.tld" class="btn btn-sm m-1" target="_blank" :class="{'btn-outline-success': tld.status === 'available', 'btn-outline-secondary': !['available'].includes(tld.status)}">
+								<span v-if="tld.status === 'loading'">.{{ tld.tld }} <div class="spinner-border spinner-border-sm" role="status"></div></span>
+								<span v-else><strong>.{{ tld.tld }}</strong> - {{ tld.status }}</span>
+							</a>
 						</div>
 					</div>
 					<div v-else class="box">
@@ -473,7 +504,6 @@ export default {
 	},
 	methods: {
 		loadInfo() {
-			const tldsToCheck = ['com', 'net', 'org', 'co']
 			const tabOverview = {
 				title: 'Overview',
 				subtitle: '',
@@ -503,9 +533,16 @@ export default {
 				status: 'loading',
 			}
 
+			const tabHistory = {
+				title: 'History',
+				subtitle: '',
+				content: 'loading WHOIS & DNS history',
+				status: 'loading',
 			}
 
-			// Get WHOIS info
+			this.tabs.push(tabOverview, tabWhois, tabNs, tabDns, tabHistory)
+
+			// Get Domain status
 			browser.runtime
 				.sendMessage({
 					action: 'fetch',
@@ -544,6 +581,9 @@ export default {
 
 						i++
 					})
+
+					this.loadKeywordStatus()
+
 				})
 				.catch(err => {
 					tabOverview.status = 'error'
@@ -625,6 +665,57 @@ export default {
 					tabDns.subtitle = 'error'
 					tabDns.content = err
 				})
+
+			// Get domain History
+			browser.runtime
+				.sendMessage({
+					action: 'fetch',
+					url: `https://api.dmns.app/domain/${this.domain}/activity`,
+				})
+				.then(response => {
+					if (response.error) {
+						throw response.error
+					}
+
+					this.data.history = response
+					tabHistory.status = 'loaded'
+					tabHistory.subtitle = `${response.length} found`
+					tabHistory.content = JSON.stringify(response, null, 2)
+				})
+				.catch(err => {
+					tabHistory.status = 'error'
+					tabHistory.subtitle = 'error'
+					tabHistory.content = err
+				})
+
+		},
+		loadKeywordStatus() {
+			const tldsToCheck = ['com', 'net', 'org', 'co', 'io', 'app']
+
+			tldsToCheck.forEach(tld => {
+				if (tld !== this.data.domain.tld) {
+					this.tlds[tld] = {
+						tld,
+						status: 'loading',
+					}
+
+					browser.runtime
+						.sendMessage({
+							action: 'fetch',
+							url: `https://api.dmns.app/domain/${this.data.domain.keyword}.${tld}`,
+						})
+						.then(tldResponse => {
+							if (tldResponse.error) {
+								throw tldResponse.error
+							}
+							this.$set(this.tlds[tld], 'status', tldResponse.availability)
+							this.$forceUpdate()
+						})
+						.catch(err => {
+							this.tlds[tld].status = 'error'
+						})
+				}
+			})
 		},
 		uniqueValues(values, defaultValue) {
 			if (defaultValue) {
@@ -796,9 +887,20 @@ export default {
 	}
 }
 
+.bg-diff-line-new {
+  background-color: #e6ffed;
 }
+
+.bg-diff-line-deleted {
+  background-color: #ffeef0;
 }
+
+.bg-diff-new {
+  background-color: #acf2bd;
 }
+
+.bg-diff-deleted {
+  background-color: #fdb8c0;
 }
 
 .ttl {
