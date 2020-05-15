@@ -1,13 +1,17 @@
 <template>
 	<div class="app-popup">
-		<h2 v-if="!domainRoot" class="text-center my-3"><a :href="`https://dmns.app/domains/${domainRoot || domain}`" class="text-dark" target="_blank">{{ domain }} <small class="text-muted">❐</small></a></h2>
+		<h2 v-if="!domainRoot" class="text-center my-3">
+			<a :href="`https://dmns.app/domains/${domainRoot || domain}`" class="text-dark" target="_blank">{{ domain }} <small class="text-muted">❐</small></a>
+		</h2>
 		<h2 v-if="domainRoot" class="text-center my-3">
-			<a :href="`https://dmns.app/domains/${domainRoot || domain}`" class="text-dark" target="_blank"><span class="text-muted">{{ domain.replace(domainRoot, '') }}</span>{{ domainRoot }} <small class="text-muted">❐</small></a>
+			<a :href="`https://dmns.app/domains/${domainRoot || domain}`" class="text-dark" target="_blank">
+				<span class="text-muted">{{ domain.replace(domainRoot, '') }}</span>{{ domainRoot }} <small class="text-muted">❐</small>
+			</a>
 		</h2>
 
 		<div v-if="valid">
 			<ul class="nav nav-tabs sticky-top bg-white mb-2">
-				<li v-for="(tab, index) in tabs" :key="index" class="nav-item" :class="{ 'opacity-0' : tab.title === 'History' && index !== tabActive }">
+				<li v-for="(tab, index) in tabs" :key="index" class="nav-item" :class="{ 'opacity-0': tab.title === 'History' && index !== tabActive }">
 					<span class="nav-link text-center cursor-pointer" :class="{ active: index === tabActive, error: tab.status === 'error' }" @click="tabActive = index">
 						<strong>{{ tab.title }}</strong>
 						<br />
@@ -70,16 +74,24 @@
 									<td>
 										<div class="mb-1" v-for="(item, index) in activity.data" :key="index">
 											<div v-if="item.kind === 'E'">
-												<p class="bg-diff-line-deleted px-2 mb-0">{{ item.path.slice(1).join(', ') }}: <span class="bg-diff-deleted px-1">{{ item.lhs }}</span></p>
-												<p class="bg-diff-line-new px-2 mb-2">{{ item.path.slice(1).join(', ') }}: <span class="bg-diff-new px-1">{{ item.rhs }}</span></p>
+												<p class="bg-diff-line-deleted px-2 mb-0">
+													{{ item.path.slice(1).join(', ') }}: <span class="bg-diff-deleted px-1">{{ item.lhs }}</span>
+												</p>
+												<p class="bg-diff-line-new px-2 mb-2">
+													{{ item.path.slice(1).join(', ') }}: <span class="bg-diff-new px-1">{{ item.rhs }}</span>
+												</p>
 											</div>
 
 											<p v-else-if="item.kind === 'D'" class="bg-diff-line-deleted px-2 mb-2">{{ item.path.slice(1).join(', ') }}: {{ item.lhs }}</p>
-											<p v-else-if="item.kind === 'A' && item.item.kind === 'D'" class="bg-diff-line-deleted px-2 mb-2">{{ item.path.slice(1).join(', ') }}, {{ item.index }}: {{ item.item.lhs }}</p>
+											<p v-else-if="item.kind === 'A' && item.item.kind === 'D'" class="bg-diff-line-deleted px-2 mb-2">
+												{{ item.path.slice(1).join(', ') }}, {{ item.index }}: {{ item.item.lhs }}
+											</p>
 
 											<p v-else-if="item.kind === 'N'" class="bg-diff-line-new px-2 mb-2">{{ item.path.slice(1).join(', ') }}: {{ item.rhs }}</p>
-											<p v-else-if="item.kind === 'A' && item.item.kind === 'N'" class="bg-diff-line-new px-2 mb-2">{{ item.path.slice(1).join(', ') }}, {{ item.index }}: {{ item.item.rhs }}</p>
-											
+											<p v-else-if="item.kind === 'A' && item.item.kind === 'N'" class="bg-diff-line-new px-2 mb-2">
+												{{ item.path.slice(1).join(', ') }}, {{ item.index }}: {{ item.item.rhs }}
+											</p>
+
 											<span v-else>{{ item }}</span>
 										</div>
 									</td>
@@ -131,8 +143,9 @@
 						</table>
 					</div>
 					<div v-else-if="tab.title === 'WHOIS'">
-
-						<p class="text-muted">This info was returned by {{ tab.whoisType }} WHOIS server <span class="badge badge-light-secondary">{{ tab.subtitle }}</span> and lightly formatted to be easier to read.</p>
+						<p class="text-muted">
+							This info was returned by {{ tab.whoisType }} WHOIS server <span class="badge badge-light-secondary">{{ tab.subtitle }}</span> and lightly formatted to be easier to read.
+						</p>
 
 						<div v-for="group in whoisGroup" class="bg-light rounded p-2 mb-3">
 							<h4>{{ group.title }}</h4>
@@ -280,7 +293,9 @@
 						</div>
 
 						<div v-if="tab.content.availability === 'available'" class="bg-light rounded p-3 mb-3">
-							<p class="lead"><strong>{{ domainRoot || domain }}</strong> is available to register:</p>
+							<p class="lead">
+								<strong>{{ domainRoot || domain }}</strong> is available to register:
+							</p>
 							<p>
 								<a v-for="buy in tab.content.services.buy" :key="buy.name" :href="buy.url" class="btn btn-outline-primary mx-1" target="_blank">{{ buy.name }}</a>
 							</p>
@@ -289,7 +304,7 @@
 						<div class="bg-light rounded p-3 mb-3">
 							<h6>Other TLDs for "{{ data.domain.keyword }}" keyword</h6>
 
-							<a v-for="tld in tlds" :href="'https://dmns.app/domains/' + data.domain.keyword + '.' + tld.tld" :key="tld.tld" class="btn btn-sm m-1" target="_blank" :class="{'btn-outline-success': tld.status === 'available', 'btn-outline-secondary': !['available'].includes(tld.status)}">
+							<a v-for="tld in tlds" :href="'https://dmns.app/domains/' + data.domain.keyword + '.' + tld.tld" :key="tld.tld" class="btn btn-sm m-1" target="_blank" :class="{ 'btn-outline-success': tld.status === 'available', 'btn-outline-secondary': !['available'].includes(tld.status) }">
 								<span v-if="tld.status === 'loading'">.{{ tld.tld }} <div class="spinner-border spinner-border-sm" role="status"></div></span>
 								<span v-else><strong>.{{ tld.tld }}</strong> - {{ tld.status }}</span>
 							</a>
@@ -582,7 +597,6 @@ export default {
 					})
 
 					this.loadKeywordStatus()
-
 				})
 				.catch(err => {
 					tabOverview.status = 'error'
@@ -686,7 +700,6 @@ export default {
 					tabHistory.subtitle = 'error'
 					tabHistory.content = err
 				})
-
 		},
 		loadKeywordStatus() {
 			const tldsToCheck = ['com', 'net', 'org', 'co', 'io', 'app']
@@ -887,19 +900,19 @@ export default {
 }
 
 .bg-diff-line-new {
-  background-color: #e6ffed;
+	background-color: #e6ffed;
 }
 
 .bg-diff-line-deleted {
-  background-color: #ffeef0;
+	background-color: #ffeef0;
 }
 
 .bg-diff-new {
-  background-color: #acf2bd;
+	background-color: #acf2bd;
 }
 
 .bg-diff-deleted {
-  background-color: #fdb8c0;
+	background-color: #fdb8c0;
 }
 
 .ttl {

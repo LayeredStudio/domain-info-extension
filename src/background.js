@@ -1,14 +1,14 @@
 global.browser = require('webextension-polyfill')
 
 const doFetch = (req, init) => {
-	return fetch(req, init).then(function(response) {
+	return fetch(req, init).then(function (response) {
 		var contentType = response.headers.get('Content-Type')
 
 		if (response.ok) {
 			return response.json()
 		} else {
 			if (contentType.includes('application/json')) {
-				return response.json().then(function(json) {
+				return response.json().then(function (json) {
 					throw json
 				})
 			} else {
