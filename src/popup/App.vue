@@ -1,9 +1,8 @@
 <template>
 	<div class="app-popup">
-		<h2 v-if="!domainRoot" class="text-center my-3">{{ domain }}</h2>
+		<h2 v-if="!domainRoot" class="text-center my-3"><a :href="`https://dmns.app/domains/${domainRoot || domain}`" class="text-dark" target="_blank">{{ domain }} <small class="text-muted">❐</small></a></h2>
 		<h2 v-if="domainRoot" class="text-center my-3">
-			<span class="text-muted">{{ domain.replace(domainRoot, '') }}</span
-			>{{ domainRoot }}
+			<a :href="`https://dmns.app/domains/${domainRoot || domain}`" class="text-dark" target="_blank"><span class="text-muted">{{ domain.replace(domainRoot, '') }}</span>{{ domainRoot }} <small class="text-muted">❐</small></a>
 		</h2>
 
 		<div v-if="valid">
