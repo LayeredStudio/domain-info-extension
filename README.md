@@ -13,7 +13,8 @@ Domain Info extension/add-on
 
 ## Install and use it
 - Google Chrome - [Install from Chrome Web Store](https://chrome.google.com/webstore/detail/domain-info/afbepfhknfficaflckmgflbmklcleidl)
-- Firefox - [Install from Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/domain-info/)
+- Mozilla Firefox - [Install from Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/domain-info/)
+- Microsoft Edge - [Install from Microsoft Edge Addons](https://microsoftedge.microsoft.com/addons/detail/nhcnfhppmodmicifhggipekmmelpbbpe)
 
 ## Dev & contributing
 To make any changes or just build from source, follow these steps:
