@@ -1,11 +1,11 @@
 <template>
 	<div class="app-popup">
 		<h2 v-if="!domainRoot" class="text-center my-3">
-			<a :href="`https://dmns.app/domains/${domainRoot || domain}`" class="text-dark" target="_blank">{{ domain }} <small class="text-muted">❐</small></a>
+			<a :href="`https://dmns.app/domains/${domainRoot || domain}`" class="text-dark" target="_blank">{{ domain }} <small v-if="valid" class="text-muted">❐</small></a>
 		</h2>
 		<h2 v-if="domainRoot" class="text-center my-3">
 			<a :href="`https://dmns.app/domains/${domainRoot || domain}`" class="text-dark" target="_blank">
-				<span class="text-muted">{{ domain.replace(domainRoot, '') }}</span>{{ domainRoot }} <small class="text-muted">❐</small>
+				<span class="text-muted">{{ domain.replace(domainRoot, '') }}</span>{{ domainRoot }} <small v-if="valid" class="text-muted">❐</small>
 			</a>
 		</h2>
 
@@ -318,7 +318,7 @@
 
 							<a v-for="tld in tlds" :href="'https://dmns.app/domains/' + data.domain.keyword + '.' + tld.tld" :key="tld.tld" class="btn btn-sm m-1" target="_blank" :class="{ 'btn-outline-success': tld.status === 'available', 'btn-outline-secondary': !['available'].includes(tld.status) }">
 								<span v-if="tld.status === 'loading'">.{{ tld.tld }} <div class="spinner-border spinner-border-sm" role="status"></div></span>
-								<span v-else><strong>.{{ tld.tld }}</strong> - {{ tld.status }}</span>
+								<span v-else><strong>.{{ tld.tld }}</strong> - {{ labelAvailability[tld.status] || tld.status }}</span>
 							</a>
 						</div>
 					</div>
@@ -362,6 +362,10 @@ export default {
 				dns: null,
 				emailProvider: null,
 				dnsProviders: [],
+				history: [],
+			},
+			labelAvailability: {
+				registered: 'taken',
 			},
 			badgeAvailability: {
 				available: 'badge-light-success',
@@ -889,7 +893,7 @@ export default {
 //@import '~@layered/layered-design/src/navbar';
 //@import '~@layered/layered-design/src/card';
 //@import '~@layered/layered-design/src/toasts';
-@import '~@layered/layered-design/src/ui-elements';
+//@import '~@layered/layered-design/src/ui-elements';
 
 .app-popup {
 	height: 500px;

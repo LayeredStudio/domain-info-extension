@@ -1,5 +1,7 @@
 global.browser = require('webextension-polyfill')
 
+// TODO cache requests
+
 const doFetch = (req, init) => {
 	return fetch(req, init).then(function (response) {
 		var contentType = response.headers.get('Content-Type')

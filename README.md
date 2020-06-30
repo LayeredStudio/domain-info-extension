@@ -1,7 +1,7 @@
 Domain Info extension/add-on
 =========
 
-**Domain Info** is a browser extension/add-on that shows really detailed info about a domain, like registration status & dates, WHOIS, Name Servers and DNS records.
+**Domain Info** is a browser extension/add-on that shows really detailed info about a domain, like registration status & dates, the person or company who registered it, WHOIS, DNS and much more.
 
 ## Highlights
 * See domain availability: registered or available
@@ -9,7 +9,8 @@ Domain Info extension/add-on
 * See domain important dates: registration date, expiry date
 * Info about Name Servers
 * DNS records: detects most subdomains added to a domain
-* Does not track or record any user data, all code used is open source
+* History: see when and what changes happened in WHOIS or DNS Records
+* Does not track or record browser history. The only info used is current tab url when extension icon is clicked
 
 ## Install and use it
 - Google Chrome - [Install from Chrome Web Store](https://chrome.google.com/webstore/detail/domain-info/afbepfhknfficaflckmgflbmklcleidl)
