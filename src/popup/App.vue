@@ -239,21 +239,24 @@
 							</div>
 						</div>
 
-						<div v-if="tab.content.availability === 'registered'" class="bg-light rounded p-3 mb-3">
+						<div v-if="tab.content.availability === 'registered'" class="bg-light rounded mb-3">
 							<div class="row align-items-center">
-								<div class="col-auto">
+								<div class="col-auto py-3">
 									<img
 										:src="getPicture(tab.content.registrant.email || '')"
 										@error="$event.target.src = 'https://files.layered.market/neutral-2.png'"
 										width="50"
-										class="rounded"
+										class="rounded ml-3"
 										alt="Registrant"
 									/>
 								</div>
-								<div class="col">
+								<div class="col py-2">
 									<p class="mb-1 lead" v-html="uniqueValues([tab.content.registrant.name, tab.content.registrant.organization], 'Anonymous')"></p>
 									<p class="mb-1" v-html="uniqueValues([tab.content.registrant.city, tab.content.registrant.stateOrProvince, tab.content.registrant.country])"></p>
-									<p class="mb-0" v-html="uniqueValues([tab.content.registrant.phone, tab.content.registrant.email], 'No contact info found')"></p>
+									<p class="mb-0 text-break" v-html="uniqueValues([tab.content.registrant.phone, tab.content.registrant.email], 'No contact info found')"></p>
+								</div>
+								<div v-if="(tab.content.registrant.city || tab.content.registrant.stateOrProvince || tab.content.registrant.country)" class="col-auto">
+									<img :src="`https://maps.googleapis.com/maps/api/staticmap?center=${[tab.content.registrant.city, tab.content.registrant.stateOrProvince, tab.content.registrant.postalCode, tab.content.registrant.country].filter(Boolean).join(', ')}&zoom=${[tab.content.registrant.city, tab.content.registrant.stateOrProvince, tab.content.registrant.country].filter(Boolean).length * 3 - 1}&size=205x115&key=AIzaSyCsteGqYhVM141VSrVKoNpA17G51g-HF8o&region=${tab.content.registrant.country}`" alt="Registrant location" class="rounded-right" />
 								</div>
 							</div>
 						</div>
