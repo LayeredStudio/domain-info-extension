@@ -11,11 +11,11 @@
 
 		<div v-if="valid">
 			<ul class="nav nav-tabs sticky-top bg-white mb-2">
-				<li v-for="(tab, index) in tabs" :key="index" class="nav-item" :class="{ 'opacity-0': tab.title === 'History' && index !== tabActive }">
+				<li v-for="(tab, index) in tabs" :key="index" class="nav-item">
 					<span class="nav-link text-center cursor-pointer" :class="{ active: index === tabActive, error: tab.status === 'error' }" @click="tabActive = index">
 						<strong>{{ tab.title }}</strong>
 						<br />
-						<small>{{ tab.subtitle || '..' }}</small>
+						<small :class="{'text-info': tab.title === 'History' && data.history.length}">{{ tab.subtitle || '..' }}</small>
 					</span>
 				</li>
 			</ul>
@@ -59,12 +59,14 @@
 						</table>
 					</div>
 					<div v-else-if="tab.title === 'History'" class="bg-light rounded p-2 mb-3">
+						<p>Notes and changes recorded about the domain.</p>
+
 						<table class="table">
 							<thead>
 								<tr>
 									<th>When</th>
 									<!--<th>Type</th>-->
-									<th>Data</th>
+									<th>Changes</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -72,27 +74,34 @@
 									<td>{{ formatDate(activity.created_at) }}</td>
 									<!--<td>{{ activity.type }}</td>-->
 									<td>
-										<div class="mb-1" v-for="(item, index) in activity.data" :key="index">
-											<div v-if="item.kind === 'E'">
-												<p class="bg-diff-line-deleted px-2 mb-0">
-													{{ item.path.slice(1).join(', ') }}: <span class="bg-diff-deleted px-1">{{ item.lhs }}</span>
+										<div v-if="activity.type === 'whois'">
+											<p><span class="badge badge-light-secondary">WHOIS change</span></p>
+											<div class="mb-1" v-for="(item, index) in activity.data" :key="index">
+												<div v-if="item.kind === 'E'">
+													<p class="bg-diff-line-deleted px-2 mb-0">
+														{{ item.path.slice(1).join(', ') }}: <span class="bg-diff-deleted px-1">{{ item.lhs }}</span>
+													</p>
+													<p class="bg-diff-line-new px-2 mb-2">
+														{{ item.path.slice(1).join(', ') }}: <span class="bg-diff-new px-1">{{ item.rhs }}</span>
+													</p>
+												</div>
+
+												<p v-else-if="item.kind === 'D'" class="bg-diff-line-deleted px-2 mb-2">{{ item.path.slice(1).join(', ') }}: {{ item.lhs }}</p>
+												<p v-else-if="item.kind === 'A' && item.item.kind === 'D'" class="bg-diff-line-deleted px-2 mb-2">
+													{{ item.path.slice(1).join(', ') }}, {{ item.index }}: {{ item.item.lhs }}
 												</p>
-												<p class="bg-diff-line-new px-2 mb-2">
-													{{ item.path.slice(1).join(', ') }}: <span class="bg-diff-new px-1">{{ item.rhs }}</span>
+
+												<p v-else-if="item.kind === 'N'" class="bg-diff-line-new px-2 mb-2">{{ item.path.slice(1).join(', ') }}: {{ item.rhs }}</p>
+												<p v-else-if="item.kind === 'A' && item.item.kind === 'N'" class="bg-diff-line-new px-2 mb-2">
+													{{ item.path.slice(1).join(', ') }}, {{ item.index }}: {{ item.item.rhs }}
 												</p>
+
+												<span v-else>{{ item }}</span>
 											</div>
-
-											<p v-else-if="item.kind === 'D'" class="bg-diff-line-deleted px-2 mb-2">{{ item.path.slice(1).join(', ') }}: {{ item.lhs }}</p>
-											<p v-else-if="item.kind === 'A' && item.item.kind === 'D'" class="bg-diff-line-deleted px-2 mb-2">
-												{{ item.path.slice(1).join(', ') }}, {{ item.index }}: {{ item.item.lhs }}
-											</p>
-
-											<p v-else-if="item.kind === 'N'" class="bg-diff-line-new px-2 mb-2">{{ item.path.slice(1).join(', ') }}: {{ item.rhs }}</p>
-											<p v-else-if="item.kind === 'A' && item.item.kind === 'N'" class="bg-diff-line-new px-2 mb-2">
-												{{ item.path.slice(1).join(', ') }}, {{ item.index }}: {{ item.item.rhs }}
-											</p>
-
-											<span v-else>{{ item }}</span>
+										</div>
+										<div v-else>
+											<p><span class="badge badge-light-secondary text-capitalize">{{ activity.type }}</span></p>
+											<p class="mb-2">{{ activity.data }}</p>
 										</div>
 									</td>
 								</tr>
@@ -886,11 +895,12 @@ export default {
 	font-size: 120%;
 }
 
-.opacity-0 {
-	opacity: 0;
-}
-
 .nav-tabs {
+	.nav-link {
+		padding-left: 0.75rem;
+		padding-right: 0.75rem;
+	}
+
 	.nav-link.error {
 		border-color: #f5c6cb;
 	}
