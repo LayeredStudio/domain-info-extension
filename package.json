@@ -1,7 +1,7 @@
 {
   "name": "domain-info",
-  "version": "1.4.0",
-  "description": "Detailed info about a site's domain, DNS and tech stack",
+  "version": "1.4.1",
+  "description": "Detailed info about a domain, DNS Records and tech stack",
   "author": "Andrei <andrei@laye.red>",
   "license": "MIT",
   "scripts": {

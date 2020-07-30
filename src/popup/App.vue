@@ -58,55 +58,58 @@
 							</tbody>
 						</table>
 					</div>
-					<div v-else-if="tab.title === 'History'" class="bg-light rounded p-2 mb-3">
-						<p>Notes and changes recorded about the domain.</p>
+					<div v-else-if="tab.title === 'History'" class="mb-3">
+						<p class="lead">Notes and changes recorded about the domain.</p>
+						<p>Want to be notified about changes in real time? <a :href="`https://dmns.app/domains/${domainRoot || domain}`" target="_blank" class="btn btn-sm btn-primary">📸 Monitor domain</a></p>
 
-						<table class="table">
-							<thead>
-								<tr>
-									<th>When</th>
-									<!--<th>Type</th>-->
-									<th>Changes</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr v-for="activity in data.history" :key="activity.id">
-									<td>{{ formatDate(activity.created_at) }}</td>
-									<!--<td>{{ activity.type }}</td>-->
-									<td>
-										<div v-if="activity.type === 'whois'">
-											<p><span class="badge badge-light-secondary">WHOIS change</span></p>
-											<div class="mb-1" v-for="(item, index) in activity.data" :key="index">
-												<div v-if="item.kind === 'E'">
-													<p class="bg-diff-line-deleted px-2 mb-0">
-														{{ item.path.slice(1).join(', ') }}: <span class="bg-diff-deleted px-1">{{ item.lhs }}</span>
+						<div class="bg-light rounded p-2">
+							<table class="table">
+								<thead>
+									<tr>
+										<th>When</th>
+										<!--<th>Type</th>-->
+										<th>Changes</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr v-for="activity in data.history" :key="activity.id">
+										<td>{{ formatDate(activity.created_at) }}</td>
+										<!--<td>{{ activity.type }}</td>-->
+										<td>
+											<div v-if="activity.type === 'whois'">
+												<p><span class="badge badge-light-secondary">WHOIS change</span></p>
+												<div class="mb-1" v-for="(item, index) in activity.data" :key="index">
+													<div v-if="item.kind === 'E'">
+														<p class="bg-diff-line-deleted px-2 mb-0">
+															{{ item.path.slice(1).join(', ') }}: <span class="bg-diff-deleted px-1">{{ item.lhs }}</span>
+														</p>
+														<p class="bg-diff-line-new px-2 mb-2">
+															{{ item.path.slice(1).join(', ') }}: <span class="bg-diff-new px-1">{{ item.rhs }}</span>
+														</p>
+													</div>
+
+													<p v-else-if="item.kind === 'D'" class="bg-diff-line-deleted px-2 mb-2">{{ item.path.slice(1).join(', ') }}: {{ item.lhs }}</p>
+													<p v-else-if="item.kind === 'A' && item.item.kind === 'D'" class="bg-diff-line-deleted px-2 mb-2">
+														{{ item.path.slice(1).join(', ') }}, {{ item.index }}: {{ item.item.lhs }}
 													</p>
-													<p class="bg-diff-line-new px-2 mb-2">
-														{{ item.path.slice(1).join(', ') }}: <span class="bg-diff-new px-1">{{ item.rhs }}</span>
+
+													<p v-else-if="item.kind === 'N'" class="bg-diff-line-new px-2 mb-2">{{ item.path.slice(1).join(', ') }}: {{ item.rhs }}</p>
+													<p v-else-if="item.kind === 'A' && item.item.kind === 'N'" class="bg-diff-line-new px-2 mb-2">
+														{{ item.path.slice(1).join(', ') }}, {{ item.index }}: {{ item.item.rhs }}
 													</p>
+
+													<span v-else>{{ item }}</span>
 												</div>
-
-												<p v-else-if="item.kind === 'D'" class="bg-diff-line-deleted px-2 mb-2">{{ item.path.slice(1).join(', ') }}: {{ item.lhs }}</p>
-												<p v-else-if="item.kind === 'A' && item.item.kind === 'D'" class="bg-diff-line-deleted px-2 mb-2">
-													{{ item.path.slice(1).join(', ') }}, {{ item.index }}: {{ item.item.lhs }}
-												</p>
-
-												<p v-else-if="item.kind === 'N'" class="bg-diff-line-new px-2 mb-2">{{ item.path.slice(1).join(', ') }}: {{ item.rhs }}</p>
-												<p v-else-if="item.kind === 'A' && item.item.kind === 'N'" class="bg-diff-line-new px-2 mb-2">
-													{{ item.path.slice(1).join(', ') }}, {{ item.index }}: {{ item.item.rhs }}
-												</p>
-
-												<span v-else>{{ item }}</span>
 											</div>
-										</div>
-										<div v-else>
-											<p><span class="badge badge-light-secondary text-capitalize">{{ activity.type }}</span></p>
-											<p class="mb-2">{{ activity.data }}</p>
-										</div>
-									</td>
-								</tr>
-							</tbody>
-						</table>
+											<div v-else>
+												<p><span class="badge badge-light-secondary text-capitalize">{{ activity.type }}</span></p>
+												<p class="mb-2">{{ activity.data }}</p>
+											</div>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
 					</div>
 					<div v-else-if="tab.title === 'DNS'" class="bg-light rounded p-2 mb-3">
 						<table class="table table-sm table-hover">
@@ -314,7 +317,7 @@
 						</div>
 
 						<div class="bg-light rounded p-3 mb-3">
-							<h6>Other TLDs for "{{ data.domain.keyword }}" keyword</h6>
+							<h6>Other TLDs for "{{ data.domain.keyword }}":</h6>
 
 							<a v-for="tld in tlds" :href="'https://dmns.app/domains/' + data.domain.keyword + '.' + tld.tld" :key="tld.tld" class="btn btn-sm m-1" target="_blank" :class="{ 'btn-outline-success': tld.status === 'available', 'btn-outline-secondary': !['available'].includes(tld.status) }">
 								<span v-if="tld.status === 'loading'">.{{ tld.tld }} <div class="spinner-border spinner-border-sm" role="status"></div></span>
@@ -332,6 +335,7 @@
 							<span class="sr-only">Loading...</span>
 						</div>
 					</div>
+					<loading></loading>
 				</div>
 				<div v-else-if="tab.status === 'error'" class="alert alert-danger">
 					{{ tab.content }}
@@ -344,9 +348,11 @@
 
 <script>
 import md5 from 'blueimp-md5'
+import Loading from '../components/Loading.vue'
 console.log = chrome.extension.getBackgroundPage().console.log
 
 export default {
+	components: { Loading },
 	data() {
 		return {
 			domain: '-',
