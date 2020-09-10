@@ -217,7 +217,7 @@
 										<strong v-if="tab.content.dates.created">{{ formatDate(tab.content.dates.created) }}</strong>
 										<i v-if="!tab.content.dates.created" class="text-muted"><small>unknown</small></i>
 									</p>
-									<p class="text-uppercase text-muted mb-0">Created</p>
+									<p class="text-uppercase text-muted mb-0">Created {{ formatDistanceToNowStrict(new Date(tab.content.dates.created), { addSuffix: true }) }}</p>
 								</div>
 								<div class="col">
 									<p class="mb-2 lead">
@@ -232,10 +232,10 @@
 										<i v-if="!tab.content.dates.expiry" class="text-muted"><small>unknown</small></i>
 									</p>
 									<p v-if="tab.content.dates.expiry && tab.content.dates.expiryDays >= 0" class="text-uppercase text-muted mb-0">
-										Expires in {{ tab.content.dates.expiryDays }} days
+										Expires {{ formatDistanceToNowStrict(new Date(tab.content.dates.expiry), { addSuffix: true }) }}
 									</p>
 									<p v-else-if="tab.content.dates.expiry && tab.content.dates.expiryDays < 0" class="text-uppercase text-muted mb-0">
-										Expired <span class="badge badge-warning">{{ tab.content.dates.expiryDays * -1 }} days ago</span>
+										<span class="badge badge-warning">Expired {{ formatDistanceToNowStrict(new Date(tab.content.dates.expiry), { addSuffix: true }) }}</span>
 									</p>
 									<p v-else class="text-uppercase text-muted mb-0">Expires</p>
 								</div>
@@ -348,6 +348,7 @@
 
 <script>
 import md5 from 'blueimp-md5'
+import { formatDistanceToNowStrict } from 'date-fns'
 import Loading from '../components/Loading.vue'
 console.log = chrome.extension.getBackgroundPage().console.log
 
@@ -539,6 +540,7 @@ export default {
 		},
 	},
 	methods: {
+		formatDistanceToNowStrict,
 		loadInfo() {
 			const tabOverview = {
 				title: 'Overview',

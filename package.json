@@ -17,6 +17,7 @@
   "dependencies": {
     "@layered/layered-design": "^1.3.0",
     "blueimp-md5": "^2.18.0",
+    "date-fns": "^2.16.1",
     "vue": "^2.6.12",
     "webextension-polyfill": "^0.6.0"
   },
