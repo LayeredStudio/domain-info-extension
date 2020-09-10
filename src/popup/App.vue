@@ -196,7 +196,7 @@
 						</div>
 					</div>
 					<div v-else-if="tab.title === 'Overview'" class="box">
-						<div class="row mb-3">
+						<div class="row mb-4">
 							<div class="col-auto text-center">
 								<h4 class="text-capitalize rounded px-2 py-1 mb-1" :class="[badgeAvailability[tab.content.availability]]">{{ tab.content.availability }}</h4>
 								<span v-if="tab.content.availability === 'registered' && tab.content.registrar.name" class="text-muted">
@@ -210,7 +210,9 @@
 							</div>
 						</div>
 
-						<div v-if="tab.content.availability === 'registered'" class="bg-light rounded p-3 mb-3">
+						<div v-if="tab.content.availability === 'registered'" class="bg-light rounded p-3 mb-4 position-relative">
+							<h6 class="subtitle position-absolute bg-light rounded d-inline-block py-1 px-2 text-muted ml-2" style="top: -12px"><small>Important dates</small></h6>
+
 							<div class="row align-items-center text-center">
 								<div class="col">
 									<p class="mb-2 lead">
@@ -242,7 +244,9 @@
 							</div>
 						</div>
 
-						<div v-if="tab.content.availability === 'registered'" class="bg-light rounded mb-3">
+						<div v-if="tab.content.availability === 'registered'" class="bg-light rounded mb-3 position-relative">
+							<h6 class="subtitle position-absolute bg-light rounded d-inline-block py-1 px-2 text-muted ml-2" style="top: -12px"><small>Domain owner</small></h6>
+
 							<div class="row align-items-center">
 								<div class="col-auto py-3">
 									<img
@@ -255,8 +259,8 @@
 								</div>
 								<div class="col py-2">
 									<p class="mb-1 lead" v-html="uniqueValues([tab.content.registrant.name, tab.content.registrant.organization], 'Anonymous')"></p>
-									<p class="mb-1" v-html="uniqueValues([tab.content.registrant.city, tab.content.registrant.stateOrProvince, tab.content.registrant.country])"></p>
-									<p class="mb-0 text-break" v-html="uniqueValues([tab.content.registrant.phone, tab.content.registrant.email], 'No contact info found')"></p>
+									<p class="mb-1" v-html="'📍 ' + uniqueValues([tab.content.registrant.city, tab.content.registrant.stateOrProvince, tab.content.registrant.country], 'No location found')"></p>
+									<p class="mb-0 text-break" v-html="'💬 ' + uniqueValues([tab.content.registrant.phone, tab.content.registrant.email], 'No contact info found')"></p>
 								</div>
 								<div v-if="(tab.content.registrant.city || tab.content.registrant.stateOrProvince || tab.content.registrant.country)" class="col-auto">
 									<img :src="`https://maps.googleapis.com/maps/api/staticmap?center=${[tab.content.registrant.city, tab.content.registrant.stateOrProvince, tab.content.registrant.postalCode, tab.content.registrant.country].filter(Boolean).join(', ')}&zoom=${[tab.content.registrant.city, tab.content.registrant.stateOrProvince, tab.content.registrant.country].filter(Boolean).length * 3 - 1}&size=205x115&key=AIzaSyCsteGqYhVM141VSrVKoNpA17G51g-HF8o&region=${tab.content.registrant.country}`" alt="Registrant location" class="rounded-right" />
@@ -264,7 +268,7 @@
 							</div>
 						</div>
 
-						<div v-if="tab.content.availability === 'registered' && !tab.content.status.includes('inactive')" class="bg-light rounded p-3 mb-3">
+						<div v-if="tab.content.availability === 'registered' && !tab.content.status.includes('inactive')" class="bg-light rounded px-3 py-2 mb-3">
 							<div class="row my-2">
 								<div class="col-3">
 									<span class="subtitle text-muted">Name Servers</span>
@@ -757,7 +761,13 @@ export default {
 			if (defaultValue) {
 				defaultValue = `<i class="text-muted">${defaultValue}</i>`
 			}
-			return [...new Set(values)].filter(Boolean).join(', ') || defaultValue
+
+			values = [...new Set(values)]
+
+			// remove item that is included in another item, ex "item 1, item 1 plus" => "item 1 plus"
+			values = values.filter(item => !values.find(el => el && el !== item && el.includes(item)))
+
+			return values.filter(Boolean).join(', ') || defaultValue
 		},
 		isWildcardSubdomain(subdomain) {
 			return subdomain.startsWith('*.')

@@ -20,7 +20,6 @@ export default [
   "It's still faster than you could draw it",
   "My other loading screen is much faster.",
   "Reconfoobling energymotron…",
-  "Are we there yet?",
   "Just count to 10",
   "Counting backwards from Infinity",
   "Embiggening Prototypes",
