@@ -322,12 +322,13 @@
 						</div>
 
 						<div class="bg-light rounded p-3 mb-3">
-							<h6>Other TLDs for "{{ data.domain.keyword }}":</h6>
-
-							<a v-for="tld in tlds" :href="'https://dmns.app/domains/' + data.domain.keyword + '.' + tld.tld" :key="tld.tld" class="btn btn-sm m-1" target="_blank" :class="{ 'btn-outline-success': tld.status === 'available', 'btn-outline-secondary': !['available'].includes(tld.status) }">
-								<span v-if="tld.status === 'loading'">.{{ tld.tld }} <div class="spinner-border spinner-border-sm" role="status"></div></span>
-								<span v-else><strong>.{{ tld.tld }}</strong> - {{ labelAvailability[tld.status] || tld.status }}</span>
-							</a>
+							<p class="lead mb-0">
+								Other TLDs for "{{ data.domain.keyword }}"
+								<a v-for="(status, tld) in tlds" :href="'https://dmns.app/domains/' + data.domain.keyword + '.' + tld" :key="tld" class="btn btn-sm m-1" target="_blank" :class="{ 'btn-outline-success': status === 'available', 'btn-outline-secondary': !['available'].includes(status) }">
+									<span v-if="status === 'loading'">.{{ tld }} <div class="spinner-border spinner-border-sm" role="status"></div></span>
+									<span v-else><strong>.{{ tld }}</strong> - {{ labelAvailability[status] || status }}</span>
+								</a>
+							</p>
 						</div>
 					</div>
 					<div v-else class="box">
@@ -732,32 +733,32 @@ export default {
 				})
 		},
 		loadKeywordStatus() {
-			const tldsToCheck = ['com', 'net', 'org', 'co', 'io', 'app']
+			const tldsToCheck = ['com', 'net', 'co', 'app'].filter(t => t !== this.data.domain.tld)
 
 			tldsToCheck.forEach(tld => {
-				if (tld !== this.data.domain.tld) {
-					this.tlds[tld] = {
-						tld,
-						status: 'loading',
+				this.tlds[tld] = 'loading'
+			})
+
+			browser.runtime
+				.sendMessage({
+					action: 'fetch',
+					url: `${apiHost}/keywords/${this.data.domain.keyword}?tlds=${tldsToCheck.join(',')}`,
+				})
+				.then(tldResponse => {
+					if (tldResponse.error) {
+						throw tldResponse.error
 					}
 
-					browser.runtime
-						.sendMessage({
-							action: 'fetch',
-							url: `https://api.dmns.app/domain/${this.data.domain.keyword}.${tld}`,
-						})
-						.then(tldResponse => {
-							if (tldResponse.error) {
-								throw tldResponse.error
-							}
-							this.$set(this.tlds[tld], 'status', tldResponse.availability)
-							this.$forceUpdate()
-						})
-						.catch(err => {
-							this.tlds[tld].status = 'error'
-						})
-				}
-			})
+					for (const tld in tldResponse.byTld) {
+						this.tlds[tld] = tldResponse.byTld[tld]
+					}
+
+					this.$forceUpdate()
+				})
+				.catch(err => {
+					this.tlds = {}
+				})
+
 		},
 		uniqueValues(values, defaultValue) {
 			if (defaultValue) {
