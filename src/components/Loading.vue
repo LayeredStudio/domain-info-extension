@@ -10,7 +10,7 @@
 
 <style>
 .fade-enter-active, .fade-leave-active {
-  transition: opacity .4s;
+  transition: opacity 0.4s;
 }
 .fade-enter, .fade-leave-to {
   opacity: 0;
@@ -41,7 +41,7 @@ export default {
 			}, 400)
 
 			this.t = setTimeout(this.setMessage, this.interval || 4000)
-		}
+		},
 	},
 }
 </script>

@@ -336,8 +336,8 @@
 						</div>
 
 						<div class="bg-light rounded p-3 mb-3">
-							<p class="lead mb-0">
-								Other TLDs for "{{ data.domain.keyword }}"
+							<p class="mb-0">
+								Other TLDs for <strong>"{{ data.domain.keyword }}"</strong>
 								<a v-for="(status, tld) in tlds" :href="'https://dmns.app/domains/' + data.domain.keyword + '.' + tld" :key="tld" class="btn btn-sm m-1" target="_blank" :class="{ 'btn-outline-success': status === 'available', 'btn-outline-secondary': !['available'].includes(status) }">
 									<span v-if="status === 'loading'">.{{ tld }} <div class="spinner-border spinner-border-sm" role="status"></div></span>
 									<span v-else><strong>.{{ tld }}</strong> - {{ labelAvailability[status] || status }}</span>
@@ -944,7 +944,8 @@ $table-hover-bg: rgba(0, 0, 0, .02);
 	height: 500px;
 	width: 700px;
 	cursor: default;
-	font-size: 120%;
+	font-size: 14px;
+	font-family: $font-family-sans-serif;
 }
 
 .nav-tabs {
