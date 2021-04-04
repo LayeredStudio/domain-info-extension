@@ -35,12 +35,11 @@
 								</tr>
 							</thead>
 							<tbody>
-								<tr v-for="ns in data.ns">
+								<tr v-for="ns in data.ns" class="on-parent">
 									<td>{{ ns.ns }}</td>
 									<td>{{ ns.soaSerial }}</td>
 									<td>
-										<p v-for="ip in ns.IPv4" class="mb-1">{{ ip }}</p>
-										<p v-for="ip in ns.IPv6" class="mb-1">{{ ip }}</p>
+										<p v-for="ip in [ ...ns.IPv4, ...ns.IPv6 ]" class="mb-1">{{ ip }} <span class="show-on-hover btn btn-sm py-0 px-1" @click="copyToClipboard(ip)" title="Copy to clipboard">✂️</span></p>
 									</td>
 									<td>
 										<p v-for="time in ns.responseTimev4" class="mb-1">
@@ -111,48 +110,50 @@
 							</table>
 						</div>
 					</div>
-					<div v-else-if="tab.title === 'DNS'" class="bg-light rounded p-2 mb-3">
-						<table class="table table-sm table-hover">
-							<thead>
-								<tr>
-									<th>Type</th>
-									<th>Name</th>
-									<th>TTL</th>
-									<th>Content</th>
-								</tr>
-							</thead>
-							<tbody v-for="(group, type) in data.dns">
-								<tr v-for="dns in group">
-									<td>
-										<span
-											class="badge"
-											:class="{
-												'badge-secondary': ['NS', 'SOA'].includes(dns.type),
-												'badge-success': ['A', 'AAAA', 'CNAME'].includes(dns.type),
-												'badge-primary': ['MX', 'TXT'].includes(dns.type),
-												'badge-info': !['NS', 'SOA', 'A', 'AAAA', 'CNAME', 'MX', 'TXT'].includes(dns.type),
-											}"
-											>{{ dns.type }}</span
-										>
-									</td>
-									<td>
-										<span :class="{ 'badge badge-light': isWildcardSubdomain(dns.name) }">{{ dns.name }}</span>
-									</td>
-									<td>
-										<span class="ttl">{{ toTime(dns.ttl) }}</span>
-									</td>
-									<td>
-										<p v-for="value in dns.value" class="mb-1">{{ value }}</p>
-									</td>
-								</tr>
-								<tr v-if="!group.length">
-									<td>
-										<span class="badge badge-light">{{ type }}</span>
-									</td>
-									<td colspan="3" class="text-muted">No {{ type }} records</td>
-								</tr>
-							</tbody>
-						</table>
+					<div v-else-if="tab.title === 'DNS'" class="mb-3">
+						<div class="bg-light rounded p-2">
+							<table class="table table-sm table-hover mb-0">
+								<thead>
+									<tr>
+										<th>Type</th>
+										<th>Name</th>
+										<th>TTL</th>
+										<th>Content</th>
+									</tr>
+								</thead>
+								<tbody v-for="(group, type) in data.dns">
+									<tr v-for="dns in group" class="on-parent">
+										<td>
+											<span
+												class="badge"
+												:class="{
+													'badge-secondary': ['NS', 'SOA'].includes(dns.type),
+													'badge-success': ['A', 'AAAA', 'CNAME'].includes(dns.type),
+													'badge-primary': ['MX', 'TXT'].includes(dns.type),
+													'badge-info': !['NS', 'SOA', 'A', 'AAAA', 'CNAME', 'MX', 'TXT'].includes(dns.type),
+												}"
+												>{{ dns.type }}</span
+											>
+										</td>
+										<td>
+											<span :class="{ 'badge badge-light': isWildcardSubdomain(dns.name) }">{{ dns.name }} <span class="show-on-hover btn btn-sm py-0 px-1" @click="copyToClipboard(dns.name)" title="Copy to clipboard">✂️</span></span>
+										</td>
+										<td>
+											<span class="ttl">{{ toTime(dns.ttl) }}</span>
+										</td>
+										<td>
+											<p v-for="value in dns.value" class="mb-1">{{ value }} <span class="show-on-hover btn btn-sm py-0 px-1" @click="copyToClipboard(value)" title="Copy to clipboard">✂️</span></p>
+										</td>
+									</tr>
+									<tr v-if="!group.length">
+										<td>
+											<span class="badge badge-light">{{ type }}</span>
+										</td>
+										<td colspan="3" class="text-muted">No {{ type }} records</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
 					</div>
 					<div v-else-if="tab.title === 'WHOIS'">
 						<p class="text-muted">
@@ -164,12 +165,12 @@
 
 							<table class="table table-hover">
 								<tbody>
-									<tr v-for="(content, label) in tab.content" :key="label" v-if="group.fields.includes(label)">
+									<tr v-for="(content, label) in tab.content" :key="label" v-if="group.fields.includes(label)" class="on-parent">
 										<th>{{ label }}</th>
 										<td>
-											<div v-if="typeof content === 'string'">{{ content }}</div>
+											<div v-if="typeof content === 'string'">{{ content }} <span class="show-on-hover btn btn-sm py-0 px-1" @click="copyToClipboard(content)" title="Copy to clipboard">✂️</span></div>
 											<div v-else>
-												<p class="mb-1" v-for="contentItem in content">{{ contentItem }}</p>
+												<p class="mb-1" v-for="contentItem in content">{{ contentItem }} <span class="show-on-hover btn btn-sm py-0 px-1" @click="copyToClipboard(contentItem)" title="Copy to clipboard">✂️</span></p>
 											</div>
 										</td>
 									</tr>
@@ -850,6 +851,14 @@ export default {
 
 			return false
 		},
+		copyToClipboard(str) {
+			const el = document.createElement('textarea');
+			el.value = str;
+			document.body.appendChild(el);
+			el.select();
+			document.execCommand('copy');
+			document.body.removeChild(el);
+		}
 	},
 }
 </script>
@@ -911,7 +920,7 @@ export default {
 //@import '~@layered/layered-design/src/navbar';
 //@import '~@layered/layered-design/src/card';
 //@import '~@layered/layered-design/src/toasts';
-//@import '~@layered/layered-design/src/ui-elements';
+@import '~@layered/layered-design/src/ui-elements';
 
 .app-popup {
 	height: 500px;
