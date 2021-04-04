@@ -1,5 +1,4 @@
 const webpack = require('webpack');
-const ejs = require('ejs');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const ExtensionReloader = require('webpack-extension-reloader');
@@ -7,7 +6,6 @@ const { VueLoaderPlugin } = require('vue-loader');
 const { version } = require('./package.json');
 
 const config = {
-  mode: process.env.NODE_ENV,
   context: __dirname + '/src',
   entry: {
     'background': './background.js',
@@ -25,7 +23,7 @@ const config = {
     rules: [
       {
         test: /\.vue$/,
-        loaders: 'vue-loader',
+        loader: 'vue-loader',
       },
       {
         test: /\.js$/,
@@ -41,22 +39,10 @@ const config = {
         use: [MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader'],
       },
       {
-        test: /\.sass$/,
-        use: [MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader?indentedSyntax'],
-      },
-      {
         test: /\.(png|jpg|gif|svg|ico)$/,
         loader: 'file-loader',
         options: {
           name: '[name].[ext]?emitFile=false',
-        },
-      },
-      {
-        test: /\.(woff(2)?|ttf|eot|svg)(\?v=\d+\.\d+\.\d+)?$/,
-        loader: 'file-loader',
-        options: {
-          name: '[name].[ext]?emitFile=false',
-          outputPath: '/fonts/'
         },
       },
     ],
@@ -72,8 +58,8 @@ const config = {
     new CopyWebpackPlugin({
       patterns: [
         { from: 'icons', to: 'icons' },
-        { from: 'popup/popup.html', to: 'popup/popup.html', transform: transformHtml },
-        { from: 'options/options.html', to: 'options/options.html', transform: transformHtml },
+        { from: 'popup/popup.html', to: 'popup/popup.html' },
+        { from: 'options/options.html', to: 'options/options.html' },
         {
           from: 'manifest.json',
           to: 'manifest.json',
@@ -93,28 +79,12 @@ const config = {
   ],
 };
 
-if (config.mode === 'production') {
-  config.plugins = (config.plugins || []).concat([
-    new webpack.DefinePlugin({
-      'process.env': {
-        NODE_ENV: '"production"',
-      },
-    }),
-  ]);
-}
+if (config.mode === 'development') {
 
-if (process.env.HMR === 'true') {
-  config.plugins = (config.plugins || []).concat([
-    new ExtensionReloader({
-      manifest: __dirname + '/src/manifest.json',
-    }),
-  ]);
-}
+  config.plugins.push(new ExtensionReloader({
+    manifest: __dirname + '/src/manifest.json',
+  }))
 
-function transformHtml(content) {
-  return ejs.render(content.toString(), {
-    ...process.env,
-  });
 }
 
 module.exports = config;
