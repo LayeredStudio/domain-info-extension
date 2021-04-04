@@ -355,6 +355,7 @@
 import md5 from 'blueimp-md5'
 import { formatDistanceToNowStrict } from 'date-fns'
 import Loading from '../components/Loading.vue'
+const apiHost = 'https://domains-api-browser-extension-qoenb5pwba-lz.a.run.app'
 console.log = chrome.extension.getBackgroundPage().console.log
 
 export default {
@@ -589,7 +590,7 @@ export default {
 			browser.runtime
 				.sendMessage({
 					action: 'fetch',
-					url: `https://api.dmns.app/domain/${this.domain}?detailed=1`,
+					url: `${apiHost}/domain/${this.domain}?detailed=1`,
 				})
 				.then(re => {
 					if (re.error) {
@@ -641,7 +642,7 @@ export default {
 			browser.runtime
 				.sendMessage({
 					action: 'fetch',
-					url: `https://api.dmns.app/domain/${this.domain}/name-servers`,
+					url: `${apiHost}/domain/${this.domain}/name-servers`,
 				})
 				.then(nsResponse => {
 					if (nsResponse.error) {
@@ -663,7 +664,7 @@ export default {
 			browser.runtime
 				.sendMessage({
 					action: 'fetch',
-					url: `https://api.dmns.app/domain/${this.domain}/dns-records`,
+					url: `${apiHost}/domain/${this.domain}/dns-records`,
 				})
 				.then(dnsResponse => {
 					if (dnsResponse.error) {
@@ -712,7 +713,7 @@ export default {
 			browser.runtime
 				.sendMessage({
 					action: 'fetch',
-					url: `https://api.dmns.app/domain/${this.domain}/activity`,
+					url: `${apiHost}/domain/${this.domain}/activity`,
 				})
 				.then(response => {
 					if (response.error) {
