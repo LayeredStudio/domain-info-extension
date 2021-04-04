@@ -23,14 +23,13 @@
 			<div v-for="(tab, index) in tabs" v-bind:key="tab.title" v-if="index === tabActive" class="py-2">
 				<div v-if="tab.status === 'loaded'">
 					<div v-if="tab.title === 'NS'" class="bg-light rounded p-2 mb-3">
-						<table class="table table-hover">
+						<table class="table table-sm table-hover mb-0">
 							<thead>
 								<tr>
 									<th>Name server</th>
 									<th>SOA Serial</th>
 									<th>IP</th>
 									<th>Response Time</th>
-									<th>Location</th>
 									<th>ISP</th>
 								</tr>
 							</thead>
@@ -52,31 +51,35 @@
 										</p>
 									</td>
 									<td>..</td>
-									<td>..</td>
 								</tr>
 							</tbody>
 						</table>
 					</div>
 					<div v-else-if="tab.title === 'History'" class="mb-3">
-						<p class="lead">Notes and changes recorded about the domain.</p>
-						<p>Want to be notified about changes in real time? <a :href="`https://dmns.app/domains/${domainRoot || domain}`" target="_blank" class="btn btn-sm btn-primary">📸 Monitor domain</a></p>
+						<p class="lead">Notes and changes detected in WHOIS info or DNS Records.</p>
+						<p class="mb-4">Want to be notified about changes in real time? <a :href="`https://dmns.app/domains/${domainRoot || domain}?monitor=yesplease`" target="_blank" class="btn btn-sm btn-primary">📸 Monitor domain</a></p>
 
 						<div class="bg-light rounded p-2">
-							<table class="table">
+							<table class="table mb-0">
 								<thead>
 									<tr>
-										<th>When</th>
-										<!--<th>Type</th>-->
-										<th>Changes</th>
+										<th class="px-2">When</th>
+										<th class="px-2">Changes</th>
 									</tr>
 								</thead>
 								<tbody>
 									<tr v-for="activity in data.history" :key="activity.id">
-										<td>{{ formatDate(activity.created_at) }}</td>
-										<!--<td>{{ activity.type }}</td>-->
-										<td>
+										<td class="px-2">
+											<p class="mb-2">{{ formatDate(activity.created_at) }}</p>
+											<p class="mb-2">{{ new Date(activity.created_at).toLocaleTimeString() }}</p>
+											<p class="mb-2"><span class="badge badge-light-secondary">WHOIS change</span></p>
+										</td>
+										<td class="px-2">
 											<div v-if="activity.type === 'whois'">
-												<p><span class="badge badge-light-secondary">WHOIS change</span></p>
+												<div v-for="text in activity.inText" class="alert alert-info mb-3 py-1 px-2">
+													<small class="text-muted mr-1">ℹ️</small> {{ text }}
+												</div>
+
 												<div class="mb-1" v-for="(item, index) in activity.data" :key="index">
 													<div v-if="item.kind === 'E'">
 														<p class="bg-diff-line-deleted px-2 mb-0">
@@ -106,11 +109,19 @@
 											</div>
 										</td>
 									</tr>
+									<tr v-if="!data.history.length">
+										<td colspan="2">
+											<p class="text-center text-muted mb-0">No changes detected yet 😕</p>
+										</td>
+									</tr>
 								</tbody>
 							</table>
 						</div>
 					</div>
 					<div v-else-if="tab.title === 'DNS'" class="mb-3">
+						<p class="lead">DNS Records retrieved from <span class="badge badge-light-secondary">{{ data.domain.ns[0] }}</span> Name Server.</p>
+						<p class="mb-4">Want to be notified when a subdomain is added or modified? <a :href="`https://dmns.app/domains/${domainRoot || domain}?monitor=yesplease`" target="_blank" class="btn btn-sm btn-primary">📸 Monitor domain</a></p>
+
 						<div class="bg-light rounded p-2">
 							<table class="table table-sm table-hover mb-0">
 								<thead>
@@ -156,14 +167,17 @@
 						</div>
 					</div>
 					<div v-else-if="tab.title === 'WHOIS'">
-						<p class="text-muted">
-							This info was returned by {{ tab.whoisType }} WHOIS server <span class="badge badge-light-secondary">{{ tab.subtitle }}</span> and lightly formatted to be easier to read.
+						<p class="mb-2">
+							This info was returned by {{ tab.whoisType }} WHOIS server <span class="badge badge-light-secondary">{{ tab.subtitle }}</span>.
+						</p>
+						<p class="mb-3">
+							Want to be notified when anything in WHOIS info changes? <a :href="`https://dmns.app/domains/${domainRoot || domain}?monitor=yesplease`" target="_blank" class="btn btn-sm btn-primary">📸 Monitor domain</a>
 						</p>
 
 						<div v-for="group in whoisGroup" class="bg-light rounded p-2 mb-3">
 							<h4>{{ group.title }}</h4>
 
-							<table class="table table-hover">
+							<table class="table table-hover mb-0">
 								<tbody>
 									<tr v-for="(content, label) in tab.content" :key="label" v-if="group.fields.includes(label)" class="on-parent">
 										<th>{{ label }}</th>
@@ -181,7 +195,7 @@
 						<div class="bg-light rounded p-2 mb-3">
 							<h4>Other WHOIS info</h4>
 
-							<table class="table table-hover">
+							<table class="table table-hover mb-0">
 								<tbody>
 									<tr v-for="(content, label) in tab.content" :key="label" v-show="!whoisGroupFields.includes(label)">
 										<th>{{ label }}</th>
@@ -868,6 +882,8 @@ export default {
 <style lang="scss" scoped>
 // Layered Design System variables
 @import '~@layered/layered-design/src/variables';
+
+$table-hover-bg: rgba(0, 0, 0, .02);
 
 // Bootstrap files below
 
