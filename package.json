@@ -8,12 +8,12 @@
     "lint": "eslint --ext .js,.vue src",
     "prettier": "prettier \"src/**/*.{js,vue}\"",
     "prettier:write": "npm run prettier -- --write",
-    "dev": "webpack --mode development --watch",
-    "build": "webpack --mode production",
+    "dev": "webpack --node-env=development --watch",
+    "build": "webpack --node-env=production",
     "build-zip": "node scripts/build-zip.js"
   },
   "dependencies": {
-    "@layered/layered-design": "1.4",
+    "@layered/layered-design": "^1.5.6",
     "blueimp-md5": "^2.18.0",
     "date-fns": "2.20",
     "vue": "^2.6.12",
@@ -43,9 +43,9 @@
     "eslint-plugin-vue": "^7.8.0",
     "file-loader": "6.2",
     "mini-css-extract-plugin": "^1.6.0",
-    "node-sass": "^5.0.0",
     "prettier": "^2.2.1",
     "pretty-quick": "3.1",
+    "sass": "^1.41.1",
     "sass-loader": "^11.0.1",
     "vue-loader": "^15.9.6",
     "vue-template-compiler": "^2.6.12",
@@ -54,5 +54,9 @@
     "webpack-cli": "^4.6.0",
     "webpack-extension-reloader": "^1.1.2"
   },
-  "browserslist": ["last 2 Chrome versions", "last 2 Edge versions", "last 2 Firefox versions"]
+  "browserslist": [
+    "last 2 Chrome versions",
+    "last 2 Edge versions",
+    "last 2 Firefox versions"
+  ]
 }

@@ -1,0 +1,159 @@
+
+// Layered Design System variables
+@import '@layered/layered-design/src/variables';
+
+// Bootstrap files
+// @import 'bootstrap';
+// OR
+
+// Bootstrap Configuration
+@import "bootstrap/scss/functions";
+@import "bootstrap/scss/variables";
+
+$info: $blue;
+
+
+$spacers: map-merge($spacers, (
+  6: $spacer * 4,
+));
+
+@import "bootstrap/scss/mixins";
+@import "bootstrap/scss/utilities";
+
+
+$success-light: $green-300;
+$success-lighter: $green-100;
+$info-light: $blue-300;
+$info-lighter: $blue-100;
+$warning-light: $yellow-300;
+$warning-lighter: $yellow-100;
+$danger-light: $red-300;
+$danger-lighter: $red-100;
+
+$ui-colors: (
+  'gray': $gray-500,
+  'primary-light': $primary-light,
+  'primary-lighter': $primary-lighter,
+  'secondary-light': $gray-300,
+  'secondary-lighter': $gray-100,
+  'success-light': $success-light,
+  'success-lighter': $success-lighter,
+  'info-light': $info-light,
+  'info-lighter': $info-lighter,
+  'warning-light': $warning-light,
+  'warning-lighter': $warning-lighter,
+  'danger-light': $danger-light,
+  'danger-lighter': $danger-lighter
+);
+
+.whitebg {
+  background-color: white !important;
+}
+
+$all-colors: map-merge-multiple($ui-colors);
+
+$utilities: map-merge(
+  $utilities,
+  (
+    "background-color": map-merge(
+      map-get($utilities, "background-color"),
+      (
+        values: map-merge(
+          map-get(map-get($utilities, "background-color"), "values"),
+          (
+            $all-colors
+          ),
+        ),
+      ),
+    ),
+  )
+);
+
+$utilities: map-merge(
+  $utilities,
+  (
+    "color": map-merge(
+      map-get($utilities, "color"),
+      (
+        values: map-merge(
+          map-get(map-get($utilities, "color"), "values"),
+          (
+            $all-colors
+          ),
+        ),
+      ),
+    ),
+  )
+);
+
+// temp
+.bg-primary-light {
+	background-color: $purple-300;
+}
+.bg-primary-lighter {
+	background-color: $purple-100;
+}
+.bg-secondary-light {
+	background-color: $gray-300;
+}
+.bg-info-light {
+	background-color: $blue-100;
+}
+.bg-success-light {
+	background-color: $green-100;
+}
+.bg-warning-light {
+	background-color: $orange-100;
+}
+.bg-danger-light {
+	background-color: $red-100;
+}
+
+
+// Bootstrap Layout & components
+@import "bootstrap/scss/root";
+@import "bootstrap/scss/reboot";
+@import "bootstrap/scss/type";
+//@import "bootstrap/scss/images";
+@import "bootstrap/scss/containers";
+@import "bootstrap/scss/grid";
+@import "bootstrap/scss/tables";
+//@import "bootstrap/scss/forms";
+@import "bootstrap/scss/buttons";
+@import "bootstrap/scss/transitions";
+//@import "bootstrap/scss/dropdown";
+//@import "bootstrap/scss/button-group";
+@import "bootstrap/scss/nav";
+//@import "bootstrap/scss/navbar";
+@import "bootstrap/scss/card";
+//@import "bootstrap/scss/accordion";
+//@import "bootstrap/scss/breadcrumb";
+//@import "bootstrap/scss/pagination";
+@import "bootstrap/scss/badge";
+@import "bootstrap/scss/alert";
+@import "bootstrap/scss/progress";
+//@import "bootstrap/scss/list-group";
+//@import "bootstrap/scss/close";
+//@import "bootstrap/scss/toasts";
+//@import "bootstrap/scss/modal";
+//@import "bootstrap/scss/tooltip";
+//@import "bootstrap/scss/popover";
+//@import "bootstrap/scss/carousel";
+@import "bootstrap/scss/spinners";
+//@import "bootstrap/scss/offcanvas";
+
+// Bootstrap Helpers
+@import "bootstrap/scss/helpers";
+
+// Bootstrap Utilities
+@import "bootstrap/scss/utilities/api";
+
+// Layered Design System overrides
+@import '@layered/layered-design/src/reboot';
+@import '@layered/layered-design/src/type';
+//@import 'images';
+@import '@layered/layered-design/src/buttons';
+@import '@layered/layered-design/src/nav';
+//@import 'navbar';
+//@import 'card';
+@import '@layered/layered-design/src/ui-elements';

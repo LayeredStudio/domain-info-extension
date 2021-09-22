@@ -1,16 +1,21 @@
 <template>
 	<div class="app-popup">
-		<h2 v-if="!domainRoot" class="text-center my-3">
-			<a :href="`https://dmns.app/domains/${domainRoot || domain}`" class="text-dark" target="_blank">{{ domain }} <small v-if="valid" class="text-muted">❐</small></a>
-		</h2>
-		<h2 v-if="domainRoot" class="text-center my-3">
-			<a :href="`https://dmns.app/domains/${domainRoot || domain}`" class="text-dark" target="_blank">
-				<span class="text-muted">{{ domain.replace(domainRoot, '') }}</span>{{ domainRoot }} <small v-if="valid" class="text-muted">❐</small>
-			</a>
-		</h2>
+		<div class="row align-items-center">
+			<div class="col">
+				<h1 class="mt-3 mb-4 ms-2">
+					<a v-if="domainRoot" :href="`https://dmns.app/domains/${domainRoot || domain}`" class="text-dark" target="_blank">
+						<span class="text-muted">{{ domain.replace(domainRoot, '') }}</span>{{ domainRoot }}
+					</a>
+					<a v-else :href="`https://dmns.app/domains/${domainRoot || domain}`" class="text-dark" target="_blank">{{ domain }}</a>
+				</h1>
+			</div>
+			<div class="col-auto">
+				<a :href="`https://dmns.app/domains/${domainRoot || domain}?monitor=yesplease`" class="btn btn-sm btn-primary" target="dmns.app">📸 Monitor domain</a>
+			</div>
+		</div>
 
 		<div v-if="valid">
-			<ul class="nav nav-tabs sticky-top bg-white mb-2">
+			<ul class="nav nav-tabs sticky-top mb-2">
 				<li v-for="(tab, index) in tabs" :key="index" class="nav-item">
 					<span class="nav-link text-center cursor-pointer" :class="{ active: index === tabActive, error: tab.status === 'error' }" @click="tabActive = index">
 						<strong>{{ tab.title }}</strong>
@@ -22,7 +27,7 @@
 
 			<div v-for="(tab, index) in tabs" v-bind:key="tab.title" v-if="index === tabActive" class="py-2">
 				<div v-if="tab.status === 'loaded'">
-					<div v-if="tab.title === 'NS'" class="bg-light rounded p-2 mb-3">
+					<div v-if="tab.title === 'NS'" class="bg-secondary-lighter rounded p-2 mb-3">
 						<table class="table table-sm table-hover mb-0">
 							<thead>
 								<tr>
@@ -77,7 +82,7 @@
 										<td class="px-2">
 											<div v-if="activity.type === 'whois'">
 												<div v-for="text in activity.inText" class="alert alert-info mb-3 py-1 px-2">
-													<small class="text-muted mr-1">ℹ️</small> {{ text }}
+													<small class="text-muted me-1">ℹ️</small> {{ text }}
 												</div>
 
 												<div class="mb-1" v-for="(item, index) in activity.data" :key="index">
@@ -119,10 +124,10 @@
 						</div>
 					</div>
 					<div v-else-if="tab.title === 'DNS'" class="mb-3">
-						<p class="lead">DNS Records retrieved from <span class="badge badge-light-secondary">{{ data.domain.ns[0] }}</span> Name Server.</p>
+						<p class="lead">DNS Records retrieved from <span class="badge bg-info-lighter text-info">{{ data.domain.ns[0] }}</span> Name Server.</p>
 						<p class="mb-4">Want to be notified when a subdomain is added or modified? <a :href="`https://dmns.app/domains/${domainRoot || domain}?monitor=yesplease`" target="_blank" class="btn btn-sm btn-primary">📸 Monitor domain</a></p>
 
-						<div class="bg-light rounded p-2">
+						<div class="bg-secondary-lighter rounded p-2">
 							<table class="table table-sm table-hover mb-0">
 								<thead>
 									<tr>
@@ -138,16 +143,20 @@
 											<span
 												class="badge"
 												:class="{
-													'badge-secondary': ['NS', 'SOA'].includes(dns.type),
-													'badge-success': ['A', 'AAAA', 'CNAME'].includes(dns.type),
-													'badge-primary': ['MX', 'TXT'].includes(dns.type),
-													'badge-info': !['NS', 'SOA', 'A', 'AAAA', 'CNAME', 'MX', 'TXT'].includes(dns.type),
+													'bg-secondary-light text-secondary': ['NS', 'SOA'].includes(dns.type),
+													'bg-success-lighter text-success': ['A', 'AAAA', 'CNAME'].includes(dns.type),
+													'bg-info-lighter text-info': ['MX', 'TXT'].includes(dns.type),
+													'bg-primary-lighter text-primary': !['NS', 'SOA', 'A', 'AAAA', 'CNAME', 'MX', 'TXT'].includes(dns.type),
 												}"
 												>{{ dns.type }}</span
 											>
 										</td>
 										<td>
-											<span :class="{ 'badge badge-light': isWildcardSubdomain(dns.name) }">{{ dns.name }} <span class="show-on-hover btn btn-sm py-0 px-1" @click="copyToClipboard(dns.name)" title="Copy to clipboard">✂️</span></span>
+											<span :class="{ 'badge bg-warning-lighter text-warning': isWildcardSubdomain(dns.name) }">
+												<a v-if="['A', 'AAAA', 'CNAME'].includes(type) && !isWildcardSubdomain(dns.name)" :href="`http://${dns.name}`" target="_blank">{{ dns.name }}</a>
+												<span v-else>{{ dns.name }}</span>
+												<span class="show-on-hover btn btn-sm py-0 px-1" @click="copyToClipboard(dns.name)" title="Copy to clipboard">✂️</span>
+											</span>
 										</td>
 										<td>
 											<span class="ttl">{{ toTime(dns.ttl) }}</span>
@@ -158,7 +167,7 @@
 									</tr>
 									<tr v-if="!group.length">
 										<td>
-											<span class="badge badge-light">{{ type }}</span>
+											<span class="badge whitebg text-secondary">{{ type }}</span>
 										</td>
 										<td colspan="3" class="text-muted">No {{ type }} records</td>
 									</tr>
@@ -168,13 +177,13 @@
 					</div>
 					<div v-else-if="tab.title === 'WHOIS'">
 						<p class="mb-2">
-							This info was returned by {{ tab.whoisType }} WHOIS server <span class="badge badge-light-secondary">{{ tab.subtitle }}</span>.
+							This info was returned by {{ tab.whoisType }} WHOIS server <span class="badge bg-info-lighter text-info">{{ tab.subtitle }}</span>.
 						</p>
 						<p class="mb-3">
 							Want to be notified when anything in WHOIS info changes? <a :href="`https://dmns.app/domains/${domainRoot || domain}?monitor=yesplease`" target="_blank" class="btn btn-sm btn-primary">📸 Monitor domain</a>
 						</p>
 
-						<div v-for="group in whoisGroup" class="bg-light rounded p-2 mb-3">
+						<div v-for="group in whoisGroup" class="bg-secondary-lighter rounded p-2 mb-3">
 							<h4>{{ group.title }}</h4>
 
 							<table class="table table-hover mb-0">
@@ -192,7 +201,7 @@
 							</table>
 						</div>
 
-						<div class="bg-light rounded p-2 mb-3">
+						<div class="bg-secondary-lighter rounded p-2 mb-3">
 							<h4>Other WHOIS info</h4>
 
 							<table class="table table-hover mb-0">
@@ -216,17 +225,16 @@
 								<h4 class="text-capitalize rounded px-2 py-1 mb-1" :class="[badgeAvailability[tab.content.availability]]">{{ tab.content.availability }}</h4>
 								<span v-if="tab.content.availability === 'registered' && tab.content.registrar.name" class="text-muted">
 									at
-									<a v-if="tab.content.registrar.url" target="_blank" :href="tab.content.registrar.url">{{ tab.content.registrar.name }}</a>
-									<span v-else>{{ tab.content.registrar.name }}</span>
+									<a target="_blank" :href="tab.content.registrar.url">{{ truncateText(tab.content.registrar.name, 20) }}</a>
 								</span>
 							</div>
 							<div class="col">
-								<span v-for="status in tab.content.status" class="badge badge-light-secondary m-1">{{ status }}</span>
+								<span v-for="status in tab.content.status" class="badge bg-secondary-lighter text-secondary m-1">{{ status }}</span>
 							</div>
 						</div>
 
-						<div v-if="tab.content.availability === 'registered'" class="bg-light rounded p-3 mb-4 position-relative">
-							<h6 class="subtitle position-absolute bg-light rounded d-inline-block py-1 px-2 text-muted ml-2" style="top: -12px"><small>Important dates</small></h6>
+						<div v-if="tab.content.availability === 'registered'" class="bg-secondary-lighter rounded p-3 mb-4 position-relative">
+							<h6 class="subtitle position-absolute bg-secondary-lighter rounded d-inline-block py-1 px-2 text-muted ms-2" style="top: -12px"><small>Important dates</small></h6>
 
 							<div class="row align-items-center text-center">
 								<div class="col">
@@ -259,8 +267,8 @@
 							</div>
 						</div>
 
-						<div v-if="tab.content.availability === 'registered'" class="bg-light rounded mb-3 position-relative">
-							<h6 class="subtitle position-absolute bg-light rounded d-inline-block py-1 px-2 text-muted ml-2" style="top: -12px"><small>Domain owner</small></h6>
+						<div v-if="tab.content.availability === 'registered'" class="bg-secondary-lighter rounded mb-3 position-relative">
+							<h6 class="subtitle position-absolute bg-secondary-lighter rounded d-inline-block py-1 px-2 text-muted ms-2" style="top: -12px"><small>Domain owner</small></h6>
 
 							<div class="row align-items-center">
 								<div class="col-auto py-3">
@@ -268,7 +276,7 @@
 										:src="getPicture(tab.content.registrant.email || '')"
 										@error="$event.target.src = 'https://files.layered.market/neutral-2.png'"
 										width="50"
-										class="rounded ml-3"
+										class="rounded ms-3"
 										alt="Registrant"
 									/>
 								</div>
@@ -278,38 +286,28 @@
 									<p class="mb-0 text-break" v-html="'💬 ' + uniqueValues([tab.content.registrant.phone, tab.content.registrant.email], 'No contact info found')"></p>
 								</div>
 								<div v-if="(tab.content.registrant.city || tab.content.registrant.stateOrProvince || tab.content.registrant.country)" class="col-auto">
-									<img :src="`https://maps.googleapis.com/maps/api/staticmap?center=${[tab.content.registrant.city, tab.content.registrant.stateOrProvince, tab.content.registrant.postalCode, tab.content.registrant.country].filter(Boolean).join(', ')}&zoom=${[tab.content.registrant.city, tab.content.registrant.stateOrProvince, tab.content.registrant.country].filter(Boolean).length * 3 - 1}&size=205x115&key=AIzaSyCsteGqYhVM141VSrVKoNpA17G51g-HF8o&region=${tab.content.registrant.country}`" alt="Registrant location" class="rounded-right" />
+									<img :src="`https://maps.googleapis.com/maps/api/staticmap?center=${[tab.content.registrant.city, tab.content.registrant.stateOrProvince, tab.content.registrant.postalCode, tab.content.registrant.country].filter(Boolean).join(', ')}&zoom=${[tab.content.registrant.city, tab.content.registrant.stateOrProvince, tab.content.registrant.country].filter(Boolean).length * 3 - 1}&size=205x115&key=AIzaSyCsteGqYhVM141VSrVKoNpA17G51g-HF8o&region=${tab.content.registrant.country}`" alt="Registrant location" class="rounded-end" />
 								</div>
 							</div>
 						</div>
 
-						<div v-if="tab.content.availability === 'registered' && !tab.content.status.includes('inactive')" class="bg-light rounded px-3 py-2 mb-3">
+						<div v-if="tab.content.availability === 'registered' && !tab.content.status.includes('inactive')" class="bg-secondary-lighter rounded p-2 mb-3">
 							<div class="row my-2">
 								<div class="col-3">
 									<span class="subtitle text-muted">Name Servers</span>
 								</div>
 								<div class="col">
-									<span v-for="ns in (tab.content.ns.length > 5 ? tab.content.ns.slice(0, 4) : tab.content.ns)" class="badge badge-light-secondary text-lowercase mr-1 mb-1">{{ ns }}</span>
+									<span v-for="ns in (tab.content.ns.length > 5 ? tab.content.ns.slice(0, 4) : tab.content.ns)" class="badge bg-info-lighter text-info text-lowercase me-1 mb-1">{{ ns }}</span>
 									<small v-if="tab.content.ns.length > 5" class="text-primary cursor-pointer" @click="tabActive = tabs.length - 3">and {{ tab.content.ns.length - 4 }} more</small>
 								</div>
 							</div>
-							<div v-if="tab.content.services.dns.length" class="row my-2">
-								<div class="col-3">
-									<span class="subtitle text-muted">DNS provider</span>
-								</div>
-								<div class="col">
-									<a v-for="dnsProvider in tab.content.services.dns" :key="dnsProvider.name" :href="dnsProvider.url" class="mr-2" target="_blank">
-										<img :src="dnsProvider.logo" width="14" class="rounded mr-1" alt="DNS provider" />
-										{{ dnsProvider.name }}
-									</a>
-								</div>
-							</div>
-							<div v-if="data.dns" class="row my-2">
+
+							<div class="row my-2">
 								<div class="col-3">
 									<span class="subtitle text-muted">DNS Records</span>
 								</div>
-								<div class="col">
-									<span v-for="dns in (Object.values(data.dns).flat().length > 6 ? [...data.dns.A, ...data.dns.CNAME].slice(0, 5) : [...data.dns.A, ...data.dns.CNAME])" class="badge badge-light-secondary text-lowercase mr-1 mb-1">{{ dns.name }}</span>
+								<div v-if="data.dns" class="col">
+									<span v-for="dns in (Object.values(data.dns).flat().length > 6 ? [...data.dns.A, ...data.dns.CNAME].slice(0, 5) : [...data.dns.A, ...data.dns.CNAME])" class="badge bg-secondary-light text-secondary text-lowercase me-1 mb-1">{{ dns.name }}</span>
 									<small v-if="Object.values(data.dns).flat().length > 6" class="text-primary cursor-pointer" @click="tabActive = tabs.length - 2">and {{ Object.values(data.dns).flat().length - 5 }} more</small>
 								</div>
 							</div>
@@ -326,7 +324,7 @@
 							</div>
 						</div>
 
-						<div v-if="tab.content.availability === 'available'" class="bg-light rounded p-3 mb-3">
+						<div v-if="tab.content.availability === 'available'" class="bg-secondary-lighter rounded p-3 mb-3">
 							<p class="lead">
 								<strong>{{ domainRoot || domain }}</strong> is available to register:
 							</p>
@@ -335,7 +333,7 @@
 							</p>
 						</div>
 
-						<div class="bg-light rounded p-3 mb-3">
+						<div class="bg-secondary-lighter rounded p-3 mb-3">
 							<p class="mb-0">
 								Other TLDs for <strong>"{{ data.domain.keyword }}"</strong>
 								<a v-for="(status, tld) in tlds" :href="'https://dmns.app/domains/' + data.domain.keyword + '.' + tld" :key="tld" class="btn btn-sm m-1" target="_blank" :class="{ 'btn-outline-success': status === 'available', 'btn-outline-secondary': !['available'].includes(status) }">
@@ -351,9 +349,7 @@
 				</div>
 				<div v-else-if="tab.status === 'loading'">
 					<div class="d-flex justify-content-center">
-						<div class="spinner-border text-primary my-3" role="status">
-							<span class="sr-only">Loading...</span>
-						</div>
+						<div class="spinner-border text-primary my-3" role="status"></div>
 					</div>
 					<loading></loading>
 				</div>
@@ -396,10 +392,10 @@ export default {
 				registered: 'taken',
 			},
 			badgeAvailability: {
-				available: 'badge-light-success',
-				registered: 'badge-light-info',
-				reserved: 'badge-light-secondary',
-				unknown: 'badge-light-warning',
+				available: 'bg-success-lighter text-green-500',
+				registered: 'bg-info-lighter text-blue-500',
+				reserved: 'bg-secondary-lighter text-secondary',
+				unknown: 'bg-warning-lighter text-warning',
 			},
 			whoisGroup: [
 				{
@@ -880,65 +876,12 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-// Layered Design System variables
-@import '~@layered/layered-design/src/variables';
+@import '../assets/design.scss';
 
-$table-hover-bg: rgba(0, 0, 0, .02);
-
-// Bootstrap files below
-
-// Configuration
-@import '~bootstrap/scss/functions';
-@import '~bootstrap/scss/variables';
-@import '~bootstrap/scss/mixins';
-
-// Layout & components
-@import '~bootstrap/scss/root';
-@import '~bootstrap/scss/reboot';
-@import '~bootstrap/scss/type';
-//@import '~bootstrap/scss/images';
-//@import '~bootstrap/scss/code';
-@import '~bootstrap/scss/grid';
-@import '~bootstrap/scss/tables';
-//@import '~bootstrap/scss/forms';
-@import '~bootstrap/scss/buttons';
-@import '~bootstrap/scss/transitions';
-// @import "~bootstrap/scss/dropdown";
-// @import "~bootstrap/scss/button-group";
-// @import "~bootstrap/scss/input-group";
-// @import "~bootstrap/scss/custom-forms";
-@import '~bootstrap/scss/nav';
-//@import "~bootstrap/scss/navbar";
-//@import "~bootstrap/scss/card";
-//@import "~bootstrap/scss/breadcrumb";
-//@import "~bootstrap/scss/pagination";
-@import '~bootstrap/scss/badge';
-//@import "~bootstrap/scss/jumbotron";
-@import '~bootstrap/scss/alert';
-//@import "~bootstrap/scss/progress";
-//@import "~bootstrap/scss/media";
-//@import "~bootstrap/scss/list-group";
-//@import "~bootstrap/scss/close";
-//@import "~bootstrap/scss/toasts";
-//@import "~bootstrap/scss/modal";
-//@import '~bootstrap/scss/tooltip';
-//@import "~bootstrap/scss/popover";
-//@import "~bootstrap/scss/carousel";
-@import '~bootstrap/scss/spinners';
-@import '~bootstrap/scss/utilities';
-//@import "~bootstrap/scss/print";
-
-// Layered Design System overrides
-@import '~@layered/layered-design/src/reboot';
-@import '~@layered/layered-design/src/type';
-//@import '~@layered/layered-design/src/images';
-@import '~@layered/layered-design/src/badge';
-@import '~@layered/layered-design/src/buttons';
-@import '~@layered/layered-design/src/nav';
-//@import '~@layered/layered-design/src/navbar';
-//@import '~@layered/layered-design/src/card';
-//@import '~@layered/layered-design/src/toasts';
-@import '~@layered/layered-design/src/ui-elements';
+a {
+	text-decoration: none;
+	color: darkblue;
+}
 
 .app-popup {
 	height: 500px;
@@ -949,9 +892,13 @@ $table-hover-bg: rgba(0, 0, 0, .02);
 }
 
 .nav-tabs {
+	background: rgba(255, 255, 255, .8);
+	backdrop-filter: blur(10px);
+
 	.nav-link {
 		padding-left: 0.75rem;
 		padding-right: 0.75rem;
+		color: $dark;
 	}
 
 	.nav-link.error {
