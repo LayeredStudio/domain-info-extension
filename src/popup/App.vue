@@ -283,7 +283,7 @@
 								<div class="col py-2">
 									<p class="mb-1 lead" v-html="uniqueValues([tab.content.registrant.name, tab.content.registrant.organization], 'Anonymous')"></p>
 									<p class="mb-1" v-html="'📍 ' + uniqueValues([tab.content.registrant.city, tab.content.registrant.stateOrProvince, tab.content.registrant.country], 'No location found')"></p>
-									<p class="mb-0 text-break" v-html="'💬 ' + uniqueValues([tab.content.registrant.phone, tab.content.registrant.email], 'No contact info found')"></p>
+									<p class="mb-0 text-break" v-html="'💬 ' + uniqueValues([tab.content.registrant.phone, highlihtLinks(tab.content.registrant.email)], 'No contact info found')"></p>
 								</div>
 								<div v-if="(tab.content.registrant.city || tab.content.registrant.stateOrProvince || tab.content.registrant.country)" class="col-auto">
 									<img :src="`https://maps.googleapis.com/maps/api/staticmap?center=${[tab.content.registrant.city, tab.content.registrant.stateOrProvince, tab.content.registrant.postalCode, tab.content.registrant.country].filter(Boolean).join(', ')}&zoom=${[tab.content.registrant.city, tab.content.registrant.stateOrProvince, tab.content.registrant.country].filter(Boolean).length * 3 - 1}&size=205x115&key=AIzaSyCsteGqYhVM141VSrVKoNpA17G51g-HF8o&region=${tab.content.registrant.country}`" alt="Registrant location" class="rounded-end" />
@@ -1036,6 +1036,26 @@ export default {
 			el.select();
 			document.execCommand('copy');
 			document.body.removeChild(el);
+		},
+		getHostname(url) {
+			const u = new URL(url)
+			return u.hostname
+		},
+		truncateText(text, characters) {
+
+			if (text.length > characters + 2) {
+				text = text.slice(0, characters) + '…'
+			}
+
+			return text
+		},
+		highlihtLinks(text) {
+
+			if (text && !this.isEmail(text)) {
+				text = text.replace(/(http[s]?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>')
+			}
+
+			return text
 		}
 	},
 }
