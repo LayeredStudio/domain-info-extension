@@ -310,15 +310,41 @@
 									<span v-for="dns in (Object.values(data.dns).flat().length > 6 ? [...data.dns.A, ...data.dns.CNAME].slice(0, 5) : [...data.dns.A, ...data.dns.CNAME])" class="badge bg-secondary-light text-secondary text-lowercase me-1 mb-1">{{ dns.name }}</span>
 									<small v-if="Object.values(data.dns).flat().length > 6" class="text-primary cursor-pointer" @click="tabActive = tabs.length - 2">and {{ Object.values(data.dns).flat().length - 5 }} more</small>
 								</div>
-							</div>
-							<div v-if="data.emailProvider" class="row my-2">
-								<div class="col-3">
-									<span class="subtitle text-muted">Email provider</span>
+								<div class="col" v-else>
+									..
 								</div>
-								<div class="col">
-									<a :href="data.emailProvider.url" target="_blank">
-										<img :src="data.emailProvider.logo" width="14" class="rounded mr-1" alt="Email provider" />
-										{{ data.emailProvider.name }}
+							</div>
+
+							<div class="row gx-2">
+								<div v-if="tab.content.registrar.url" class="col-2 my-1">
+									<a :href="tab.content.registrar.url" class="bg-primary-lighter rounded py-2 d-block text-center" target="_blank">
+										<p class="subtitle text-muted mb-2">Registrar</p>
+										<p class="mb-1"><img :src="`https://logo.clearbit.com/${getHostname(tab.content.registrar.url)}`" width="50" class="rounded" alt="Registrar" /></p>
+										<p class="mb-0">{{ tab.content.registrar.name }}</p>
+									</a>
+								</div>
+
+								<div v-for="dnsProvider in tab.content.services.dns" :key="dnsProvider.name" class="col-2 my-1">
+									<a :href="dnsProvider.url" class="bg-primary-lighter rounded py-2 d-block text-center" target="_blank">
+										<p class="subtitle text-muted mb-2">DNS Provider</p>
+										<p class="mb-1"><img :src="dnsProvider.logo" width="50" class="rounded" alt="DNS provider" /></p>
+										<p class="mb-0">{{ dnsProvider.name }}</p>
+									</a>
+								</div>
+
+								<div v-if="data.emailProvider" class="col-2 my-1">
+									<a :href="data.emailProvider.url" class="bg-primary-lighter rounded py-2 d-block text-center" target="_blank">
+										<p class="subtitle text-muted mb-2">Inbound email</p>
+										<p class="mb-1"><img :src="data.emailProvider.logo" width="50" class="rounded" alt="Email provider" /></p>
+										<p class="mb-0">{{ data.emailProvider.name }}</p>
+									</a>
+								</div>
+
+								<div v-for="email in data.services.emailOutbound" :key="`email-out-${email.name}`" class="col-2 my-1">
+									<a :href="email.url" class="bg-primary-lighter rounded py-2 d-block text-center" target="_blank">
+										<p class="subtitle text-muted mb-2" style="font-size: 80%">Outbound email</p>
+										<p class="mb-1"><img :src="email.logo" width="50" class="rounded" alt="DNS provider" /></p>
+										<p class="mb-0">{{ email.name }}</p>
 									</a>
 								</div>
 							</div>
@@ -385,7 +411,10 @@ export default {
 				ns: null,
 				dns: null,
 				emailProvider: null,
-				dnsProviders: [],
+				services: {
+					emailInbound: [],
+					emailOutbound: [],
+				},
 				history: [],
 			},
 			labelAvailability: {
@@ -705,6 +734,8 @@ export default {
 						dnsData[recordType] = Object.values(dnsData[recordType])
 					}
 
+					this.idTXT(dnsResponse.TXT)
+
 					if (dnsData.MX.length) {
 						this.idMX(dnsData.MX[0].value)
 					}
@@ -818,6 +849,133 @@ export default {
 			const emailRegex = /\S+@\S+\.\S+/
 			return email && emailRegex.test(email.toLowerCase())
 		},
+		idTXT(txtRecords) {
+			const emails = {
+				'_spf.google.com': {
+					name: 'Gmail',
+					url: 'https://www.google.com/gmail/about/',
+					logo: 'https://logo.clearbit.com/google.com',
+				},
+				'spf.mtasv.net': {
+					name: 'Postmark',
+					url: 'https://postmarkapp.com/',
+					logo: 'https://postmarkapp.com/images/apple-touch-icon.png',
+				},
+				'helpscoutemail.com': {
+					name: 'HelpScout',
+					url: 'https://www.helpscout.com/',
+					logo: 'https://logo.clearbit.com/helpscout.com',
+				},
+				'email.freshdesk.com': {
+					name: 'Freshdesk',
+					url: 'https://freshdesk.com/',
+					logo: 'https://freshdesk.com/static-assets/images/favicon/fworks.png',
+				},
+				'amazonses.com': {
+					name: 'Amazon SES',
+					url: 'https://aws.amazon.com/ses/',
+					logo: 'https://a0.awsstatic.com/libra-css/images/site/touch-icon-iphone-114-smile.png',
+				},
+				'sendgrid.net': {
+					name: 'SendGrid',
+					url: 'https://sendgrid.com/',
+					logo: 'https://logo.clearbit.com/sendgrid.com',
+				},
+				'.secureserver.net': {
+					name: 'GoDaddy Webmail',
+					url: 'https://www.godaddy.com',
+					logo: 'https://logo.clearbit.com/godaddy.com',
+				},
+				'.mcsv.net': {
+					name: 'Mailchimp',
+					url: 'https://mailchimp.com/',
+					logo: 'https://mailchimp.com/release/plums/cxp/images/apple-touch-icon-192.ce8f3e6d.png',
+				},
+				'.zendesk.com': {
+					name: 'Zendesk',
+					url: 'https://www.zendesk.com/',
+					logo: 'https://d26a57ydsghvgx.cloudfront.net/www/public/assets/images/logos/zendesk114.png',
+				},
+				'emailsrvr.com': {
+					name: 'Rackspace Email',
+					url: 'https://www.rackspace.com/email-hosting/webmail',
+					logo: 'https://www.rackspace.com/themes/custom/rackspace/favicon.ico',
+				},
+				'.sailthru.com': {
+					name: 'Sailthru',
+					url: 'https://www.sailthru.com/product/email/',
+					logo: 'https://logo.clearbit.com/sailthru.com',
+				},
+				'.groovehq.com': {
+					name: 'Groove',
+					url: 'https://www.groovehq.com/',
+					logo: 'https://logo.clearbit.com/groovehq.com',
+				},
+				'.qualtrics.com': {
+					name: 'Qualtrics',
+					url: 'https://www.qualtrics.com/',
+					logo: 'https://www.qualtrics.com/favicon-32x32.png?v=1',
+				},
+				'aspmx.pardot.com': {
+					name: 'Pardot',
+					url: 'https://www.pardot.com/',
+					logo: 'https://logo.clearbit.com/pardot.com',
+				},
+				'.mandrillapp.com': {
+					name: 'Mailchimp Mandrill',
+					url: 'https://mailchimp.com/features/transactional-email/',
+					logo: 'https://mailchimp.com/release/plums/cxp/images/apple-touch-icon-192.ce8f3e6d.png',
+				},
+				'mailgun.org': {
+					name: 'Mailgun',
+					url: 'https://www.mailgun.com/',
+					logo: 'https://logo.clearbit.com/mailgun.com',
+				},
+				'mailsenders.netsuite.com': {
+					name: 'NetSuite',
+					url: 'https://www.netsuite.com/',
+					logo: 'https://logo.clearbit.com/netsuite.com',
+				},
+				'mlsend.com': {
+					name: 'MailerLite',
+					url: 'https://www.mailerlite.com/',
+					logo: 'https://www.mailerlite.com/assets/site/favicons/favicon-32x32.png',
+				},
+				'sendinblue.com': {
+					name: 'Sendinblue',
+					url: 'https://www.sendinblue.com/',
+					logo: 'https://www.sendinblue.com/wp-content/themes/sendinblue2019/assets/favicon/favicon-32x32.png',
+				},
+				'.hubspotemail.net': {
+					name: 'HubSpot',
+					url: 'https://www.hubspot.com/',
+					logo: 'https://www.hubspot.com/hubfs/HubSpot_Logos/HubSpot-Inversed-Favicon.png',
+				},
+			}
+			const added = []
+
+			txtRecords.forEach(record => {
+				const valueParts = record.value.replace(/\/?\"/g, '').split(' ')
+
+				if (valueParts[0] === 'v=spf1') {
+					valueParts.forEach(part => {
+						if (part.startsWith('include:')) {
+							const spf = part.replace('include:', '')
+
+							for (const spfServer in emails) {
+								if (!added.includes(spfServer) && spf.includes(spfServer)) {
+									this.data.services.emailOutbound.push(emails[spfServer])
+									added.push(spfServer)
+								}
+							}
+						}
+					})
+				}
+
+				
+			})
+
+		},
 		idMX(mxRecords) {
 			const mxServers = {
 				'emailsrvr.com': {
@@ -850,13 +1008,21 @@ export default {
 					url: 'https://www.godaddy.com/email',
 					logo: 'https://img1.wsimg.com/ux/favicon/favicon-96x96.png',
 				},
+				'pphosted.com': {
+					name: 'Proofpoint Email',
+					url: 'https://www.proofpoint.com/us/products/email-security-and-protection',
+					logo: 'https://www.proofpoint.com/themes/custom/proofpoint/apps/drupal/images/favicons/favicon-120x120.png',
+				},
 			}
+
+			const added = []
 
 			for (const mxServer in mxServers) {
 				mxRecords.forEach(mxRecord => {
-					if (mxRecord.toLowerCase().includes(mxServer)) {
+					if (!added.includes(mxServer) && mxRecord.toLowerCase().includes(mxServer)) {
+						this.data.services.emailInbound.push(mxServers[mxServer])
+						added.push(mxServer)
 						this.data.emailProvider = mxServers[mxServer]
-						return true
 					}
 				})
 			}
