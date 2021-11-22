@@ -22,7 +22,7 @@
   "devDependencies": {
     "@babel/core": "^7.13.14",
     "@babel/plugin-proposal-optional-chaining": "^7.13.12",
-    "@babel/preset-env": "^7.13.12",
+    "@babel/preset-env": "^7.16.4",
     "@babel/runtime-corejs3": "^7.13.10",
     "archiver": "5.3",
     "babel-eslint": "^10.1.0",
