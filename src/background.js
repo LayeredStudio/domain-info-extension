@@ -1,33 +1,28 @@
-global.browser = require('webextension-polyfill')
+chrome.runtime.onInstalled.addListener((details) => {
+	console.log('onInstalled...', details);
 
-// TODO cache requests
-
-const doFetch = (req, init) => {
-	return fetch(req, init).then(function (response) {
-		var contentType = response.headers.get('Content-Type')
-
-		if (response.ok) {
-			return response.json()
-		} else {
-			if (contentType.includes('application/json')) {
-				return response.json().then(function (json) {
-					throw json
-				})
-			} else {
-				throw new Error(response.statusText)
-			}
-		}
-	})
-}
-
-browser.runtime.onMessage.addListener((req, sender) => {
-	if (req.action === 'fetch') {
-		return new Promise((resolve, reject) => {
-			doFetch(req.url, req.options || {})
-				.then(resolve)
-				.catch(err => resolve({ error: err.error || err.message }))
-		})
-
-		return true
+	if (details.reason === chrome.runtime.OnInstalledReason.INSTALL) {     
+		//chrome.runtime.openOptionsPage();
 	}
-})
+
+	// disable extension action
+	chrome.action.disable();
+
+	// enable extension action on valid domains
+	chrome.declarativeContent.onPageChanged.removeRules(undefined, () => {
+
+		// rules: tabs with valid domains
+		const rules = [{
+			conditions: [
+				new chrome.declarativeContent.PageStateMatcher({
+					pageUrl: {schemes: ['http', 'https', 'ftp']},
+				})
+			],
+			actions: [new chrome.declarativeContent.ShowAction()],
+		}];
+
+		chrome.declarativeContent.onPageChanged.addRules(rules);
+	});
+});
+
+//chrome.runtime.setUninstallURL("https://dmns.app/browser-extension/uninstall");

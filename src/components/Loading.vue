@@ -1,11 +1,9 @@
 <template>
-
 	<div class="text-center">
 		<transition name="fade" mode="in-out">
 			<p v-if="message" class="lead" :key="message">{{ message }}</p>
 		</transition>
 	</div>
-
 </template>
 
 <style>
