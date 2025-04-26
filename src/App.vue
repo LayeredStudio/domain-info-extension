@@ -11,13 +11,11 @@ import DateTime from './components/DateTime.vue'
 
 const apiRequest = path => {
 	const url = new URL(path, 'https://domains-api.com')
-	url.searchParams.set('apiKey', 'sk_01h9wzmcrsb1an2njdczzmeze1')
+	url.searchParams.set('key', process.env.VUE_DOMAINS_API_KEY)
 
 	return fetch(url, {
 		method: 'GET',
-		headers: {
-			//Authorization: 'Bearer sk_01h9wzmcrsb1an2njdczzmeze1',
-		},
+		headers: {},
 	})
 }
 
