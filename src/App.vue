@@ -8,6 +8,7 @@ import md5 from 'md5'
 import { parse } from 'tldts'
 
 import DateTime from './components/DateTime.vue'
+import { countryCodeToFlag } from './utils/geo.ts'
 
 const apiRequest = path => {
 	const url = new URL(path, 'https://domains-api.com')
@@ -217,6 +218,7 @@ export default {
 			related: 'similar-websites',
 			relatedSimilarWebsites: [],
 
+			ipInfoLoaded: new Set(),
 			ipInfo: {},
 		}
 	},
@@ -253,6 +255,7 @@ export default {
 	},
 
 	methods: {
+		countryCodeToFlag,
 		formatDistanceToNow,
 		uniq,
 
@@ -472,6 +475,11 @@ export default {
 								}
 							})
 
+							// load IP info
+							if (['A', 'AAAA'].includes(record.type)) {
+								this.loadIpInfo(record.data)
+							}
+
 							read()
 						}
 					})
@@ -541,10 +549,11 @@ export default {
 			return mapUrl.toString()
 		},
 		loadIpInfo(ip) {
-			if (!(ip in this.ipInfo)) {
+			if (!this.ipInfoLoaded.has(ip)) {
+				this.ipInfoLoaded.add(ip)
 				this.ipInfo[ip] = null
 
-				fetch(`https://web-api.com/ip-info/${ip}?key=api_01j9r5r56xwvgh00rmfn5yzdtk`)
+				fetch(`https://web-api.com/ip-info-country/${ip}?key=${import.meta.env.VITE_WEB_API_KEY}`)
 					.then(response => {
 						if (response.ok) {
 							return response.json()
@@ -1330,31 +1339,14 @@ export default {
 							<td class="py-2 px-1 align-top">{{ record.ttl }}</td>
 							<td class="py-2 pl-1 pr-2">
 								<p v-for="value in record.data" class="break-all mb-1 last:mb-0">
-									<Popper :hover="true" placement="top" @open:popper="loadIpInfo(value)">
-										<span class="inline-block rounded px-1 hover:bg-neutral-200 dark:hover:bg-gray-700" @click="$event => copyText($event, value)"
-											>{{ value }} <span class="text-blue-500">ℹ</span></span
-										>
-
-										<template #content>
-											<h6 class="mb-2">
-												IP Info for <strong>{{ value }}</strong>
-											</h6>
-
-											<p v-if="!ipInfo[value]" class="text-center"><img src="/three-dots.svg" class="inline" width="48" alt="Loader" /></p>
-											<p v-else-if="typeof ipInfo[value] === 'string'">{{ ipInfo[value] }}</p>
-											<template v-else>
-												<p class="mb-1">
-													Org: <strong>{{ ipInfo[value].org }}</strong>
-												</p>
-												<p class="mb-1 last:mb-0">
-													Location: <strong>{{ [ipInfo[value].city, ipInfo[value].region, ipInfo[value].country].filter(Boolean).join(', ') }}</strong>
-												</p>
-												<p v-if="ipInfo[value].hostname" class="mb-1 last:mb-0">
-													Hostname: <strong>{{ ipInfo[value].hostname }}</strong>
-												</p>
-											</template>
-										</template>
-									</Popper>
+									<span class="inline-block rounded px-1 hover:bg-neutral-200 dark:hover:bg-gray-700" @click="$event => copyText($event, value)">{{
+										value
+									}}</span>
+									<span v-if="ipInfo[value]" class="ml-2 inline-block rounded px-1 bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400"
+										>{{ countryCodeToFlag(ipInfo[value].country_code) }} {{ ipInfo[value].country }} &middot; {{ ipInfo[value].as_name }} ({{
+											ipInfo[value].asn
+										}})</span
+									>
 								</p>
 							</td>
 						</tr>
@@ -1369,31 +1361,14 @@ export default {
 							<td class="py-2 px-1 align-top">{{ record.ttl }}</td>
 							<td class="py-2 pl-1 pr-2">
 								<p v-for="value in record.data" class="break-all mb-1 last:mb-0">
-									<Popper :hover="true" placement="top" @open:popper="loadIpInfo(value)">
-										<span class="inline-block rounded px-1 hover:bg-neutral-200 dark:hover:bg-gray-700" @click="$event => copyText($event, value)"
-											>{{ value }} <span class="text-blue-500">ℹ</span></span
-										>
-
-										<template #content>
-											<h6 class="mb-2">
-												IP Info for <strong>{{ value }}</strong>
-											</h6>
-
-											<p v-if="!ipInfo[value]" class="text-center"><img src="/three-dots.svg" class="inline" width="48" alt="Loader" /></p>
-											<p v-else-if="typeof ipInfo[value] === 'string'">{{ ipInfo[value] }}</p>
-											<template v-else>
-												<p class="mb-1">
-													Org: <strong>{{ ipInfo[value].org }}</strong>
-												</p>
-												<p class="mb-1 last:mb-0">
-													Location: <strong>{{ [ipInfo[value].city, ipInfo[value].region, ipInfo[value].country].filter(Boolean).join(', ') }}</strong>
-												</p>
-												<p v-if="ipInfo[value].hostname" class="mb-1 last:mb-0">
-													Hostname: <strong>{{ ipInfo[value].hostname }}</strong>
-												</p>
-											</template>
-										</template>
-									</Popper>
+									<span class="inline-block rounded px-1 hover:bg-neutral-200 dark:hover:bg-gray-700" @click="$event => copyText($event, value)">{{
+										value
+									}}</span>
+									<span v-if="ipInfo[value]" class="ml-2 inline-block rounded px-1 bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400"
+										>{{ countryCodeToFlag(ipInfo[value].country_code) }} {{ ipInfo[value].country }} &middot; {{ ipInfo[value].as_name }} ({{
+											ipInfo[value].asn
+										}})</span
+									>
 								</p>
 							</td>
 						</tr>
