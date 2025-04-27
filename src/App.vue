@@ -49,7 +49,7 @@ export default {
 				tld: '',
 				availability: 'registered',
 				status: [],
-				ns: [],
+				nameservers: [],
 				dates: {
 					created: null,
 					updated: null,
@@ -227,24 +227,26 @@ export default {
 			return this.whoisGroup.map(g => g.fields).flat()
 		},
 		nameServers() {
-			if (this.domainInfo.ns.length) {
-				return this.domainInfo.ns
+			if (this.domainInfo.nameservers.length) {
+				return this.domainInfo.nameservers
 			} else {
 				return this.records.filter(r => r.type === 'NS').map(r => r.value)
 			}
 		},
 		expiryBgClass() {
-			if (this.domainInfo.dates.expiryDays < 11) {
-				return 'bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800'
-			} else if (this.domainInfo.dates.expiryDays < 21) {
-				return 'bg-orange-50 dark:bg-orange-950 hover:bg-orange-100 dark:hover:bg-orange-900'
-			} else if (this.domainInfo.dates.expiryDays < 31) {
-				return 'bg-amber-50 dark:bg-amber-950 hover:bg-amber-100 dark:hover:bg-amber-900'
-			} else if (this.domainInfo.dates.expiryDays < 61) {
-				return 'bg-yellow-50 dark:bg-yellow-950 hover:bg-yellow-100 dark:hover:bg-yellow-900'
-			} else {
-				return 'bg-cyan-50 dark:bg-cyan-950 hover:bg-cyan-100 dark:hover:bg-cyan-900'
+			if (this.domainInfo.dates.expiry) {
+				const expiryDays = Math.ceil((new Date(this.domainInfo.dates.expiry).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+
+				if (expiryDays < 11) {
+					return 'bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800'
+				} else if (expiryDays < 21) {
+					return 'bg-orange-50 dark:bg-orange-950 hover:bg-orange-100 dark:hover:bg-orange-900'
+				} else if (expiryDays < 31) {
+					return 'bg-amber-50 dark:bg-amber-950 hover:bg-amber-100 dark:hover:bg-amber-900'
+				}
 			}
+
+			return 'bg-cyan-50 dark:bg-cyan-950 hover:bg-cyan-100 dark:hover:bg-cyan-900'
 		},
 	},
 
@@ -291,7 +293,6 @@ export default {
 				this.tabType = 'ip'
 			} else if (parsed.isIcann) {
 				this.loadDomainInfo()
-				//this.loadWhois()
 				this.loadHistory()
 				this.loadDnsRecords()
 				this.loadRelatedDomains()
@@ -326,7 +327,12 @@ export default {
 		},
 		setView(view) {
 			this.view = view
-			chrome.storage.sync.set({ lastview: this.view })
+
+			if (view === 'whois' && this.states.whois === 'idle') {
+				this.loadWhois()
+			}
+
+			chrome.storage.sync.set({ lastview: view === 'whois' ? 'overview' : view })
 		},
 		hidePromo(promo) {
 			this.promos.push(promo)
@@ -334,26 +340,26 @@ export default {
 		},
 
 		loadDomainInfo() {
-			apiRequest(`domains/${this.domain}?follow=2`)
+			apiRequest(`domains/${this.domain}/info`)
 				.then(response => {
 					if (response.ok) {
 						return response.json()
 					} else {
-						response.text().then(text => {
-							this.whois = text
-						})
-
 						throw new Error(response.statusText)
 					}
 				})
 				.then(data => {
 					// set whois data
-					this.whoisServers.push(...Object.keys(data.whois))
-					this.whois = data.whois
-					this.states.whois = 'loaded'
-					delete data.whois
+					if (data.source === 'whois' && data.whois) {
+						this.whoisServers.push(...Object.keys(data.whois))
+						this.whois = data.whois
+						this.states.whois = 'loaded'
+						delete data.whois
+					} else {
+						this.states.whois = 'idle'
+					}
 
-					data.ns.forEach(nameServer => {
+					data.nameservers.forEach(nameServer => {
 						const services = identifyServicesFromNameServer(nameServer)
 						services.forEach(service => {
 							if (!this.services.find(s => s.id === service.id)) {
@@ -364,7 +370,7 @@ export default {
 
 					// get contact types with data
 					for (const contactType in data.contacts) {
-						if (Object.values(data.contacts[contactType]).filter(Boolean).length && !this.contactTypes.includes(contactType)) {
+						if (!this.contactTypes.includes(contactType) && data.contacts[contactType] !== null) {
 							this.contactTypes.push(contactType)
 						}
 					}
@@ -378,6 +384,28 @@ export default {
 					this.states.whois = 'error'
 					this.whois = error.message
 					console.error(error)
+				})
+		},
+		loadWhois() {
+			this.states.whois = 'loading'
+
+			apiRequest(`domains/${this.domain}/whois?follow=2`)
+				.then(response => {
+					if (response.ok) {
+						return response.json()
+					} else {
+						throw new Error(response.statusText)
+					}
+				})
+				.then(data => {
+					this.whoisServers.push(...Object.keys(data))
+					this.whois = data
+					this.states.whois = 'loaded'
+				})
+				.catch(error => {
+					this.whois = error.message
+					console.warn('WHOIS error', error)
+					this.states.whois = 'error'
 				})
 		},
 		whoisDataDifferent(field) {
@@ -713,7 +741,9 @@ export default {
 						</div>
 
 						<div class="dark:text-gray-200 p-3 text-center rounded-md" :class="expiryBgClass">
-							<p class="uppercase text-gray-600 dark:text-gray-400">Expires</p>
+							<p class="uppercase text-gray-600 dark:text-gray-400">
+								{{ domainInfo.dates.expiry && new Date(domainInfo.dates.expiry) < new Date() ? 'Expired' : 'Expires' }}
+							</p>
 
 							<template v-if="states.domain === 'loading'">
 								<h4 class="text-xl my-1">..</h4>
@@ -742,7 +772,7 @@ export default {
 
 					<div v-if="domainInfo.contacts" class="flex items-center bg-slate-50 dark:bg-slate-800 gap-2 rounded-md mb-4">
 						<img
-							:src="getPicture(domainInfo.contacts[contactType].email || '')"
+							:src="getPicture(domainInfo.contacts[contactType]?.email || '')"
 							:alt="domain"
 							@error="$event.target.src = tabFavicon || 'https://files.layered.market/neutral-2.png'"
 							class="block m-2 ml-3"
@@ -750,29 +780,35 @@ export default {
 							height="50"
 						/>
 						<div class="flex-grow py-3 dark:text-gray-200">
-							<p v-if="domainInfo.contacts[contactType].name || domainInfo.contacts[contactType].organization" class="text-lg mb-1">
-								{{ uniq([domainInfo.contacts[contactType].name, domainInfo.contacts[contactType].organization].filter(Boolean)).join(', ') }}
+							<p v-if="domainInfo.contacts[contactType]?.name || domainInfo.contacts[contactType]?.organization" class="text-lg mb-1">
+								{{ uniq([domainInfo.contacts[contactType]?.name, domainInfo.contacts[contactType]?.organization].filter(Boolean)).join(', ') }}
 							</p>
 							<p v-else class="text-neutral-500 dark:text-neutral-400 mb-1">Unknown</p>
 
-							<p v-if="domainInfo.contacts[contactType].city || domainInfo.contacts[contactType].state || domainInfo.contacts[contactType].country" class="mt-1">
+							<p
+								v-if="domainInfo.contacts[contactType]?.city || domainInfo.contacts[contactType]?.stateOrProvince || domainInfo.contacts[contactType]?.country"
+								class="mt-1"
+							>
 								📍
 								{{
 									uniq(
 										[
 											domainInfo.contacts[contactType].city,
-											[domainInfo.contacts[contactType].state, domainInfo.contacts[contactType].postalCode].filter(Boolean).join(' '),
+											[domainInfo.contacts[contactType].stateOrProvince, domainInfo.contacts[contactType].postalCode].filter(Boolean).join(' '),
 											domainInfo.contacts[contactType].country,
 										].filter(Boolean),
 									).join(', ')
 								}}
 							</p>
 
-							<p v-if="domainInfo.contacts[contactType].phone" class="mt-1">📞 {{ domainInfo.contacts[contactType].phone }}</p>
-							<p v-if="domainInfo.contacts[contactType].email" class="mt-1 break-all">💬 {{ domainInfo.contacts[contactType].email }}</p>
+							<p v-if="domainInfo.contacts[contactType]?.phone" class="mt-1">📞 {{ domainInfo.contacts[contactType].phone }}</p>
+							<p v-if="domainInfo.contacts[contactType]?.email" class="mt-1 break-all">💬 {{ domainInfo.contacts[contactType].email }}</p>
+							<p v-if="domainInfo.contacts[contactType]?.contactUrl" class="mt-1 break-all">
+								💬 <a :href="domainInfo.contacts[contactType].contactUrl" target="_blank">{{ domainInfo.contacts[contactType].contactUrl }}</a>
+							</p>
 						</div>
 						<img
-							v-if="domainInfo.contacts[contactType].country"
+							v-if="domainInfo.contacts[contactType]?.country"
 							:src="mapUrlForContact(domainInfo.contacts[contactType])"
 							width="180"
 							height="118"
