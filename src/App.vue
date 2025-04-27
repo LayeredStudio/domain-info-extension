@@ -12,7 +12,7 @@ import { countryCodeToFlag } from './utils/geo.ts'
 
 const apiRequest = path => {
 	const url = new URL(path, 'https://domains-api.com')
-	url.searchParams.set('key', process.env.VUE_DOMAINS_API_KEY)
+	url.searchParams.set('key', import.meta.env.VITE_DOMAINS_API_KEY)
 
 	return fetch(url, {
 		method: 'GET',
