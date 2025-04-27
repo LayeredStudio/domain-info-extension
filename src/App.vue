@@ -294,8 +294,8 @@ export default {
 			} else if (parsed.isIcann) {
 				this.loadDomainInfo()
 				this.loadHistory()
-				this.loadDnsRecords()
 				this.loadRelatedDomains()
+				this.loadDnsRecords('cloudflare-dns')
 			} else {
 				this.tabType = 'invalid'
 			}
@@ -454,10 +454,8 @@ export default {
 				})
 		},
 
-		loadDnsRecords() {
-			const options = {
-				resolver: 'cloudflare-dns',
-			}
+		loadDnsRecords(resolver) {
+			const options = { resolver }
 
 			if (this.subdomain) {
 				options.subdomains = [this.subdomain]
