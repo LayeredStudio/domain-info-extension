@@ -14,11 +14,11 @@
 	"dependencies": {
 		"@layered/dns-records": "^2.0.0-beta.6",
 		"@layered/domain-utils": "^1.0.1",
-		"date-fns": "^2.30.0",
+		"date-fns": "^4.1.0",
 		"ip-regex": "^5.0.0",
 		"lodash-es": "^4.17.21",
 		"md5": "^2.3.0",
-		"tldts": "^6.0.9",
+		"tldts": "^7.0.4",
 		"vue": "^3.2.47",
 		"vue3-popper": "^1.5.0"
 	},
