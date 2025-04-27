@@ -706,11 +706,11 @@ export default {
 		<template v-if="view === 'overview'">
 			<template v-if="domainInfo.availability === 'registered'">
 				<div class="p-3 pb-1">
-					<h3 class="mb-1 text-lg dark:text-gray-200">Important dates</h3>
+					<!-- <h3 class="mb-1 text-lg dark:text-gray-200">Important dates</h3> -->
 
 					<div class="grid grid-cols-3 gap-3 mb-4">
 						<div class="bg-sky-50 dark:bg-sky-950 hover:bg-sky-100 dark:hover:bg-sky-900 dark:text-gray-200 p-3 text-center rounded-md">
-							<p class="uppercase text-gray-600 dark:text-gray-400">Created</p>
+							<p class="uppercase text-gray-600 dark:text-gray-400">Registered</p>
 
 							<template v-if="states.domain === 'loading'">
 								<h4 class="text-xl my-1">..</h4>
@@ -1160,20 +1160,28 @@ export default {
 			<div v-else-if="states.history === 'error'" class="p-3 text-center dark:text-gray-200">⚠️ There was an error loading the history for this domain.</div>
 			<div v-else class="p-3">
 				<p v-if="history.length" class="mb-3 dark:text-gray-200">
-					These are the changes we detected for this domain.
+					Changes we detected for <code>{{ domain }}</code
+					>.
 					<a :href="`https://dmns.app/${domain}?action=monitor&ref=browser-extension`" target="_blank" class="underline text-blue-800 dark:text-blue-300"
 						>Monitor the domain</a
 					>
 					to get instant alerts when more changes are detected.
 				</p>
-				<div v-else class="m-6 bg-indigo-50 dark:bg-indigo-950 border border-indigo-100 dark:border-indigo-800 rounded-md p-3 text-center dark:text-gray-200">
-					<p class="text-lg mb-2">No changes detected for this domain, yet</p>
-					<p>
-						<a :href="`https://dmns.app/${domain}?action=monitor&ref=browser-extension`" target="_blank" class="underline text-blue-800 dark:text-blue-300"
-							>Monitor the domain</a
+				<div v-else class="text-center dark:text-gray-200 py-8">
+					<img src="/icon-empty-folder.png" class="mx-auto mb-3" width="128" alt="No domain history" />
+
+					<p class="text-xl mb-1">No changes detected, yet</p>
+					<p class="mb-5">Monitor the domain to be notified about any update</p>
+
+					<div class="content-center items-center">
+						<a
+							:href="`https://dmns.app/${domain}?action=monitor&ref=browser-extension`"
+							target="_blank"
+							class="rounded-full py-1 px-3 bg-purple-700 hover:bg-purple-600 text-white dark:bg-indigo-800 hover:dark:bg-indigo-700 dark:text-gray-200"
+							>Monitor domain</a
 						>
-						to get instant alerts when a change is detected <a href="https://dmns.app/monitor-domains" target="_blank" class="inline-block ml-2">ℹ️</a>
-					</p>
+						<a href="https://dmns.app/monitor-domains" target="_blank" class="ml-3">Learn more</a>
+					</div>
 				</div>
 
 				<div v-for="activity in history" class="border-l-2 border-neutral-300 dark:border-neutral-600 ml-3 py-3 pl-6 relative">
@@ -1282,18 +1290,20 @@ export default {
 				</div>
 			</div>
 
-			<div v-else-if="states.dns === 'loaded' && !records.length" class="m-6 bg-indigo-50 border border-indigo-100 rounded-md p-3 flex gap-x-4 items-center">
-				<img src="https://dmns.app/images/plan-pro.png" class="flex-none" width="100" height="100" />
+			<div v-else-if="states.dns === 'loaded' && !records.length" class="text-center py-8">
+				<img src="/icon-empty-folder.png" class="mx-auto mb-3" width="128" alt="No domain history" />
 
-				<div class="flex-grow">
-					<p class="text-lg mb-3">No DNS Records found</p>
-					<p class="mb-2">We scoured the internet, and couldn't find any..</p>
-					<p class="">
-						<a :href="`https://dmns.app/${domain}?action=monitor&ref=browser-extension`" target="_blank" class="underline text-blue-800 dark:text-blue-300"
-							>Monitor the domain</a
-						>
-						to get instant alerts when a change is detected
-					</p>
+				<p class="text-xl mb-1">No DNS Records found</p>
+				<p class="mb-5">Monitor the domain to be notified about any DNS update</p>
+
+				<div class="content-center items-center">
+					<a
+						:href="`https://dmns.app/${domain}?action=monitor&ref=browser-extension`"
+						target="_blank"
+						class="rounded-full py-1 px-3 bg-purple-700 hover:bg-purple-600 text-white dark:bg-indigo-800 hover:dark:bg-indigo-700 dark:text-gray-200"
+						>Monitor domain</a
+					>
+					<a href="https://dmns.app/monitor-domains" target="_blank" class="ml-3">Learn more</a>
 				</div>
 			</div>
 
