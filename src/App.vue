@@ -531,13 +531,10 @@ export default {
 
 		getPicture(email) {
 			email = String(email).trim().toLowerCase()
-			const logoClearbit = `https://logo.clearbit.com/${this.domain}?size=100`
+			//const domainLogo = `https://logo.clearbit.com/${this.domain}?size=100`
+			const domainLogo = `https://www.google.com/s2/favicons?sz=100&domain_url=${this.domain}`
 
-			return this.isEmail(email) ? `https://www.gravatar.com/avatar/${md5(email)}?s=100&d=${logoClearbit}` : logoClearbit
-		},
-		isEmail(email) {
-			email = String(email).trim().toLowerCase()
-			return /\S+@\S+\.\S+/.test(email)
+			return this.isEmail(email) ? `https://www.gravatar.com/avatar/${md5(email)}?s=100&d=${domainLogo}` : domainLogo
 		},
 		mapUrlForContact(contact) {
 			const codeToCountry = {
