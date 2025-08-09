@@ -262,13 +262,12 @@ export default {
 		getDomain,
 		uniq,
 
+		isEmail(email) {
+			email = String(email).trim().toLowerCase()
+			return /\S+@\S+\.\S+/.test(email)
+		},
 		isIp(ip) {
 			return ipRegex({ exact: true }).test(ip)
-		},
-		urlPart(url, key) {
-			const urlObj = new URL(url)
-
-			return urlObj[key]
 		},
 
 		async checkTab() {
@@ -840,7 +839,7 @@ export default {
 								<Popper v-if="domainInfo.registrar" :hover="true" placement="top">
 									<a v-if="domainInfo.registrar.url && domainInfo.registrar.url !== 'http://'" :href="domainInfo.registrar.url" target="_blank">
 										<img
-											:src="`https://logo.clearbit.com/${urlPart(domainInfo.registrar.url, 'hostname')}?size=32`"
+											:src="`https://logo.clearbit.com/${getDomain(domainInfo.registrar.url)}?size=32`"
 											@error="$event.target.style.display = 'none'"
 											height="16"
 											class="float-left h-4 mr-1 rounded"
@@ -1241,7 +1240,7 @@ export default {
 						</a>
 						<p class="px-3 text-neutral-800 dark:text-neutral-400">
 							<DateTime :date="new Date(activity.created_at)" :style="whoisTimeStyle" @click="switchWhoisTimeStyle"></DateTime>
-							&middot; Source: {{ urlPart(activity.data.url, 'hostname') }}
+							&middot; Source: {{ getDomain(activity.data.url) }}
 						</p>
 					</div>
 					<div v-else-if="activity.type === 'note'">
