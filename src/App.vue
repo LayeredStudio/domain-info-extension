@@ -5,7 +5,7 @@ import { formatDistanceToNow } from 'date-fns'
 import ipRegex from 'ip-regex'
 import { uniq } from 'lodash-es'
 import md5 from 'md5'
-import { parse } from 'tldts'
+import { getDomain, parse } from 'tldts'
 
 import DateTime from './components/DateTime.vue'
 import { countryCodeToFlag } from './utils/geo.ts'
@@ -259,6 +259,7 @@ export default {
 	methods: {
 		countryCodeToFlag,
 		formatDistanceToNow,
+		getDomain,
 		uniq,
 
 		isIp(ip) {
@@ -928,30 +929,26 @@ export default {
 				</template>
 			</template>
 			<template v-else-if="domainInfo.availability === 'available'">
-				<div class="m-9 bg-cyan-50 dark:bg-cyan-950 border border-cyan-100 dark:border-cyan-800 rounded-md px-3 py-4 text-center dark:text-gray-200">
-					<p class="text-lg mb-3">Great news! This domain is available</p>
+				<div class="text-center dark:text-gray-200 py-9 px-6">
+					<p class="text-lg mb-3">Great news, this domain is available!</p>
 
-					<p class="mb-2 text-gray-800">Register it with:</p>
-					<p>
+					<p class="mb-2 text-gray-800">Get it now at</p>
+					<div>
 						<a
-							href="https://porkbun.com/checkout/search?ref=andreiigna&q=adamadamadamadam.com"
+							v-for="action in domainInfo.actions.filter(action => action.type === 'register')"
+							:href="action.url"
 							target="_blank"
-							class="inline-block px-2 py-1 rounded bg-slate-50 border border-slate-200 hover:border-slate-300 mx-1"
-							><img class="float-left me-1" src="https://porkbun.com/favicon.ico" alt="Porkbun" width="16" height="16" /> Porkbun</a
+							class="inline-block px-2 py-1 rounded bg-slate-50 border border-slate-200 hover:border-slate-300 mx-1 mb-2"
+							><img
+								class="float-left me-1"
+								:src="`https://www.google.com/s2/favicons?sz=32&domain_url=${getDomain(action.url)}`"
+								:alt="action.name"
+								width="16"
+								height="16"
+							/>
+							{{ action.name }}</a
 						>
-						<a
-							href="https://www.dynadot.com/domain/search?domain=adamadamadamadam.com"
-							target="_blank"
-							class="inline-block px-2 py-1 rounded bg-slate-50 border border-slate-200 hover:border-slate-300 mx-1"
-							><img class="float-left me-1" src="https://www.dynadot.com/favicon.ico" alt="Dynadot" width="16" height="16" /> Dynadot</a
-						>
-						<a
-							href="https://www.namecheap.com/domains/registration/results/?domain=adamadamadamadam.com"
-							target="_blank"
-							class="inline-block px-2 py-1 rounded bg-slate-50 border border-slate-200 hover:border-slate-300 mx-1"
-							><img class="float-left me-1" src="https://www.namecheap.com/favicon.ico" alt="Namecheap" width="16" height="16" /> Namecheap</a
-						>
-					</p>
+					</div>
 				</div>
 			</template>
 			<template v-else-if="domainInfo.availability === 'unknown'">
