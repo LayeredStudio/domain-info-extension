@@ -294,8 +294,8 @@ export default {
 			} else if (parsed.isIcann) {
 				this.loadDomainInfo()
 				this.loadHistory()
-				this.loadRelatedDomains()
 				this.loadDnsRecords('cloudflare-dns')
+				//this.loadRelatedDomains()
 			} else {
 				this.tabType = 'invalid'
 			}
@@ -531,8 +531,7 @@ export default {
 
 		getPicture(email) {
 			email = String(email).trim().toLowerCase()
-			//const domainLogo = `https://logo.clearbit.com/${this.domain}?size=100`
-			const domainLogo = `https://www.google.com/s2/favicons?sz=100&domain_url=${this.domain}`
+			const domainLogo = `https://logo.clearbit.com/${this.domain}?size=100`
 
 			return this.isEmail(email) ? `https://www.gravatar.com/avatar/${md5(email)}?s=100&d=${domainLogo}` : domainLogo
 		},
@@ -1158,7 +1157,7 @@ export default {
 					>
 					to get instant alerts when more changes are detected.
 				</p>
-				<div v-else class="text-center dark:text-gray-200 py-8">
+				<div v-else class="text-center dark:text-gray-200 py-6">
 					<img src="/icon-empty-folder.png" class="mx-auto mb-3" width="128" alt="No domain history" />
 
 					<p class="text-xl mb-1">No changes detected, yet</p>
@@ -1168,10 +1167,10 @@ export default {
 						<a
 							:href="`https://dmns.app/${domain}?action=monitor&ref=browser-extension`"
 							target="_blank"
-							class="rounded-full py-1 px-3 bg-purple-700 hover:bg-purple-600 text-white dark:bg-indigo-800 hover:dark:bg-indigo-700 dark:text-gray-200"
+							class="rounded-full text-lg py-1 px-3 bg-purple-700 hover:bg-purple-600 text-white dark:bg-indigo-800 hover:dark:bg-indigo-700 dark:text-gray-200"
 							>Monitor domain</a
 						>
-						<a href="https://dmns.app/monitor-domains" target="_blank" class="ml-3">Learn more</a>
+						<a href="https://dmns.app/monitor-domains" target="_blank" class="ml-3 underline">Learn more</a>
 					</div>
 				</div>
 
