@@ -1175,7 +1175,7 @@ export default {
 				</div>
 
 				<div v-for="activity in history" class="border-l-2 border-neutral-300 dark:border-neutral-600 ml-3 py-3 pl-6 relative">
-					<div v-if="activity.type === 'whois'">
+					<div v-if="['domain-info', 'rdap', 'whois', 'whois2'].includes(activity.type)">
 						<div class="absolute bg-stone-100 dark:bg-stone-700 rounded-full text-lg leading-none p-2 mt-2" style="left: -17px">
 							<template v-if="activity.detected_changes.includes('renewed')">🔁</template>
 							<template v-else-if="activity.detected_changes.includes('transfer-completed')">🤝</template>
@@ -1184,60 +1184,78 @@ export default {
 							<template v-else>🕸️</template>
 						</div>
 
-						<div class="bg-stone-100 dark:bg-stone-800 dark:text-gray-200 rounded-lg p-3 mb-1">
-							<h3 class="text-lg font-medium mb-3">{{ activity.detected_changes.length ? activity.text : `Changes detected in WHOIS` }}</h3>
+						<div class="bg-stone-100 dark:bg-neutral-800 dark:text-gray-200 rounded-lg py-3">
+							<h3 class="text-lg font-medium mx-3 mb-2">
+								{{
+									activity.text || `${activity.data.filter(item => item.path[0] !== 'date_updated').length} change(s) detected in ${activity.type.toUpperCase()}`
+								}}
+							</h3>
 
 							<template v-for="item in activity.data">
-								<p v-if="item.kind === 'D'" class="bg-red-100 dark:bg-red-900 px-1 mb-1">{{ item.path[1] }}: {{ item.lhs }}</p>
-								<p v-else-if="item.kind === 'A' && item.item.kind === 'D'" class="bg-red-100 dark:bg-red-900 px-1 mb-1">
-									{{ item.path[1] }}, {{ item.index }}: {{ item.item.lhs }}
+								<p
+									v-if="item.type === 'REMOVE' || (item.type === 'CHANGE' && !item.value)"
+									class="px-3 py-1 transition-colors hover:bg-neutral-200/40 dark:hover:bg-neutral-900/50"
+								>
+									{{ item.path.join(' / ') }}:
+									<del class="inline-block px-1 rounded bg-red-100 text-red-900 dark:bg-red-900 dark:text-red-300">{{ item.oldValue }}</del>
 								</p>
-
-								<p v-else-if="item.kind === 'N'" class="bg-green-100 dark:bg-green-900 px-1 mb-1">{{ item.path[1] }}: {{ item.rhs }}</p>
-								<p v-else-if="item.kind === 'A' && item.item.kind === 'N'" class="bg-green-100 dark:bg-green-900 px-1 mb-1">
-									{{ item.path[1] }}, {{ item.index }}: {{ item.item.rhs }}
+								<p
+									v-else-if="(item.type === 'CREATE' || (item.type === 'CHANGE' && !item.oldValue)) && item.value"
+									class="px-3 py-1 transition-colors hover:bg-neutral-200/40 dark:hover:bg-neutral-900/50"
+								>
+									{{ item.path.join(' / ') }}:
+									<ins class="inline-block px-1 rounded no-underline bg-green-100 text-green-900 dark:bg-green-900 dark:text-green-300">{{ item.value }}</ins>
 								</p>
-
-								<div v-if="item.kind === 'E' && item.path[1] !== 'Updated Date'" class="mb-1">
-									<p class="bg-red-100 dark:bg-red-900 px-1">
-										{{ item.path[1] }}: <span v-if="item.lhs" class="bg-red-200 dark:bg-red-800 px-1">{{ item.lhs }}</span>
-									</p>
-									<p class="bg-green-100 dark:bg-green-900 px-1">
-										{{ item.path[1] }}: <span v-if="item.rhs" class="bg-green-200 dark:bg-green-800 px-1">{{ item.rhs }}</span>
-									</p>
-								</div>
+								<p
+									v-else-if="item.type === 'CHANGE' && item.path[0] !== 'date_updated'"
+									class="px-3 py-1 transition-colors hover:bg-neutral-200/40 dark:hover:bg-neutral-900/50"
+								>
+									{{ item.path.join(' / ') }}:
+									<del class="inline-block px-1 rounded-l bg-red-100 text-red-900 dark:bg-red-900 dark:text-red-300">{{ item.oldValue }}</del>
+									<ins class="inline-block px-1 rounded-r no-underline bg-green-100 text-green-950 dark:bg-green-900 dark:text-green-300">{{ item.value }}</ins>
+								</p>
 							</template>
+							<p class="text-neutral-600 dark:text-neutral-400 mt-2 px-3">
+								<DateTime :date="new Date(activity.created_at)" :style="whoisTimeStyle" @click="switchWhoisTimeStyle"></DateTime>
+								&middot; Source: <code class="uppercase">{{ activity.source || activity.type }}</code>
+							</p>
 						</div>
-						<p class="px-3 text-neutral-800 dark:text-neutral-400">
-							<DateTime :date="new Date(activity.created_at)" :style="whoisTimeStyle" @click="switchWhoisTimeStyle"></DateTime>
-							&middot; Source: WHOIS
-						</p>
 					</div>
 					<div v-else-if="activity.type === 'sale'">
 						<div class="absolute bg-emerald-100 dark:bg-emerald-700 rounded-full text-lg leading-none p-2 mt-2" style="left: -17px">💸</div>
 
-						<div class="bg-emerald-50 dark:bg-emerald-900 dark:text-gray-200 rounded-lg p-3 mb-1">
-							<h3 class="text-lg font-medium">{{ activity.text }}</h3>
-						</div>
-						<p class="px-3 text-neutral-800 dark:text-neutral-400">
-							<DateTime :date="new Date(activity.created_at)" :style="whoisTimeStyle" @click="switchWhoisTimeStyle"></DateTime>
-							&middot; Source: <a v-if="activity.data.source === 'namebio'" :href="`https://namebio.com/${domain}`" target="_blank">Namebio.com</a
-							><template v-else>{{ activity.data.source }}</template>
-						</p>
+						<a
+							class="block transition-colors border border-green-200 bg-green-100 hover:border-green-300 dark:border-emerald-800 dark:bg-emerald-950 rounded-lg dark:hover:border-emerald-700 p-3"
+							:href="activity.data.source === 'namebio' ? `https://namebio.com/${domain}?ref=dmns.app` : `https://${activity.data.source}`"
+							target="_blank"
+						>
+							<h3 class="text-lg font-medium text-green-700 dark:text-emerald-300 mb-2">
+								{{ domain.toUpperCase() }} sold for
+								<strong>{{ activity.data.price.toLocaleString('default', { style: 'currency', currency: 'USD' }).replace('.00', '') }}</strong>
+								{{ activity.data.venue ? 'at ' + activity.data.venue : '' }}
+							</h3>
+							<p class="text-neutral-600 dark:text-neutral-400">
+								<DateTime :date="new Date(activity.created_at)" :style="whoisTimeStyle"></DateTime> &middot; Source:
+								{{ activity.data.source }}
+							</p>
+						</a>
 					</div>
 					<div v-else-if="activity.type === 'url'">
 						<div class="absolute bg-sky-100 dark:bg-sky-700 rounded-full text-lg leading-none p-2 mt-2" style="left: -17px">
 							{{ activity.data.url.includes('twitter.com') ? '🐦' : '🔗' }}
 						</div>
 
-						<a :href="activity.data.url" target="_blank" class="block bg-sky-50 dark:bg-sky-950 dark:text-gray-200 rounded-lg p-3 mb-1">
-							<h3 class="text-lg font-medium mb-2">{{ activity.data.title }}</h3>
-							<p>{{ activity.data.description }}</p>
+						<a
+							:href="activity.data.url"
+							target="_blank"
+							class="block rounded-lg p-3 transition-colors border bg-slate-50 border-slate-100 hover:bg-slate-100 hover:border-slate-200 dark:bg-slate-900 dark:border-slate-800 hover:dark:bg-slate-900 dark:hover:border-slate-700"
+						>
+							<h3 class="text-lg font-medium mb-2 dark:text-neutral-200">{{ activity.data.title }}</h3>
+							<p class="mb-2 leading-relaxed dark:text-neutral-200">{{ activity.data.description }}</p>
+							<p class="text-neutral-600 dark:text-neutral-400">
+								<DateTime :date="new Date(activity.created_at)" :style="whoisTimeStyle"></DateTime> &middot; {{ getDomain(activity.data.url) }}
+							</p>
 						</a>
-						<p class="px-3 text-neutral-800 dark:text-neutral-400">
-							<DateTime :date="new Date(activity.created_at)" :style="whoisTimeStyle" @click="switchWhoisTimeStyle"></DateTime>
-							&middot; Source: {{ getDomain(activity.data.url) }}
-						</p>
 					</div>
 					<div v-else-if="activity.type === 'note'">
 						<div class="absolute bg-amber-100 dark:bg-amber-700 rounded-full text-lg leading-none p-2 mt-1" style="left: -17px">📝</div>
