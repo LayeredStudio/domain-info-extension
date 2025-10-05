@@ -1,8 +1,8 @@
 {
 	"manifest_version": 3,
-	"name": "Domain Info",
-	"description": "View detailed info for any domain name: registration status & dates, WHOIS, DNS records, Name Servers, and more",
-	"version": "2.5.0",
+	"name": "Domo - domain name info: WHOIS, RDAP, DNS & history lookup",
+	"description": "Super detailed info for any domain name: registration status & dates, WHOIS, RDAP, DNS records, Name Servers, and more",
+	"version": "2.6.0",
 	"icons": {
 		"16": "icons/icon_48.png",
 		"32": "icons/icon_48.png",
