@@ -204,6 +204,7 @@ export default {
 
 			history: [],
 
+			dnsResolver: 'cloudflare-dns',
 			records: [],
 			recordsGrouped: {
 				A: {},
@@ -294,7 +295,7 @@ export default {
 			} else if (parsed.isIcann) {
 				this.loadDomainInfo()
 				this.loadHistory()
-				this.loadDnsRecords('cloudflare-dns')
+				this.loadDnsRecords()
 				//this.loadRelatedDomains()
 			} else {
 				this.tabType = 'invalid'
@@ -454,8 +455,14 @@ export default {
 				})
 		},
 
-		loadDnsRecords(resolver) {
-			const options = { resolver }
+		loadDnsRecords() {
+			this.states.dns = 'loading'
+			this.records = []
+			this.recordsGrouped.A = {}
+			this.recordsGrouped.AAAA = {}
+			this.recordsGrouped.CNAME = {}
+			this.recordsGrouped.TXT = {}
+			const options = { resolver: this.dnsResolver }
 
 			if (this.subdomain) {
 				options.subdomains = [this.subdomain]
@@ -602,6 +609,11 @@ export default {
 			setTimeout(() => {
 				target.textContent = originalText
 			}, 1500)
+		},
+	},
+	watch: {
+		dnsResolver() {
+			this.loadDnsRecords()
 		},
 	},
 }
@@ -1284,10 +1296,8 @@ export default {
 			</div>
 		</template>
 		<template v-else-if="view === 'dns'">
-			<div v-if="states.dns === 'error'" class="p-3 text-center">⚠️ There was an error loading the history for this domain.</div>
-
 			<div
-				v-else-if="domainInfo.availability === 'available'"
+				v-if="domainInfo.availability === 'available'"
 				class="m-6 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-700 dark:text-gray-200 rounded-md p-3 flex gap-x-4 items-center"
 			>
 				<img src="https://dmns.app/images/plan-pro.png" class="flex-none" width="100" height="100" />
@@ -1297,24 +1307,6 @@ export default {
 					<p>Because this domain is not yet registered.</p>
 				</div>
 			</div>
-
-			<div v-else-if="states.dns === 'loaded' && !records.length" class="text-center py-8">
-				<img src="/icon-empty-folder.png" class="mx-auto mb-3" width="128" alt="No domain history" />
-
-				<p class="text-xl mb-1">No DNS Records found</p>
-				<p class="mb-5">Monitor the domain to be notified about any DNS update</p>
-
-				<div class="content-center items-center">
-					<a
-						:href="`https://dmns.app/${domain}?action=monitor&ref=browser-extension`"
-						target="_blank"
-						class="rounded-full py-1 px-3 bg-purple-700 hover:bg-purple-600 text-white dark:bg-indigo-800 hover:dark:bg-indigo-700 dark:text-gray-200"
-						>Monitor domain</a
-					>
-					<a href="https://dmns.app/monitor-domains" target="_blank" class="ml-3">Learn more</a>
-				</div>
-			</div>
-
 			<template v-else>
 				<div class="p-3 flex items-center">
 					<div class="flex-grow">
@@ -1329,15 +1321,38 @@ export default {
 							/>
 						</p>
 					</div>
-					<a
-						:href="`https://dmns.app/${domain}/dns-records?action=download-zone-file`"
-						target="_blank"
-						class="block rounded-full py-1 px-3 bg-indigo-200 hover:bg-indigo-300 text-gray-800 dark:bg-gray-800 hover:dark:bg-gray-700 dark:text-gray-200"
-						>Download zone file</a
-					>
+					<div class="flex items-center gap-x-3">
+						<select v-model="dnsResolver" class="rounded-full py-1 px-2 bg-neutral-100 hover:bg-neutral-200">
+							<option value="cloudflare-dns">Cloudflare DNS</option>
+							<option value="google-dns">Google DNS</option>
+						</select>
+						<a
+							:href="`https://dmns.app/${domain}/dns-records?action=download-zone-file`"
+							target="_blank"
+							class="block rounded-full py-1 px-3 bg-indigo-200 hover:bg-indigo-300 text-gray-800 dark:bg-gray-800 hover:dark:bg-gray-700 dark:text-gray-200"
+							>Download zone file</a
+						>
+					</div>
 				</div>
 
-				<table class="w-full mb-3">
+				<div v-if="(states.dns === 'loaded' && !records.length) || 0" class="text-center py-8">
+					<img src="/icon-empty-folder.png" class="mx-auto mb-3" width="128" alt="No domain history" />
+
+					<p class="text-xl mb-1">No DNS Records found</p>
+					<p class="mb-5">Monitor the domain to be notified about any DNS update</p>
+
+					<div class="content-center items-center">
+						<a
+							:href="`https://dmns.app/${domain}?action=monitor&ref=browser-extension`"
+							target="_blank"
+							class="rounded-full py-1 px-3 bg-purple-700 hover:bg-purple-600 text-white dark:bg-indigo-800 hover:dark:bg-indigo-700 dark:text-gray-200"
+							>Monitor domain</a
+						>
+						<a href="https://dmns.app/monitor-domains" target="_blank" class="ml-3">Learn more</a>
+					</div>
+				</div>
+				<div v-else-if="states.dns === 'error'" class="p-3 text-center">⚠️ There was an error finding the DNS records.</div>
+				<table v-else class="w-full mb-3">
 					<thead>
 						<tr class="bg-neutral-100 dark:bg-neutral-900">
 							<th class="text-left py-1 pl-2 pr-1 text-neutral-700 dark:text-neutral-200">NS &amp; Security</th>
