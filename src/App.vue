@@ -1248,7 +1248,7 @@ export default {
 							</h3>
 							<p class="text-neutral-600 dark:text-neutral-400">
 								<DateTime :date="new Date(activity.created_at)" :style="whoisTimeStyle"></DateTime> &middot; Source:
-								{{ activity.data.source }}
+								{{ activity.source || activity.data.source }}
 							</p>
 						</a>
 					</div>
