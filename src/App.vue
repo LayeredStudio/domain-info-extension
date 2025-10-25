@@ -791,16 +791,13 @@ export default {
 							</p>
 							<p v-else class="text-neutral-500 dark:text-neutral-400 mb-1">Unknown</p>
 
-							<p
-								v-if="domainInfo.contacts[contactType]?.city || domainInfo.contacts[contactType]?.stateOrProvince || domainInfo.contacts[contactType]?.country"
-								class="mt-1"
-							>
+							<p v-if="domainInfo.contacts[contactType]?.city || domainInfo.contacts[contactType]?.state || domainInfo.contacts[contactType]?.country" class="mt-1">
 								📍
 								{{
 									uniq(
 										[
 											domainInfo.contacts[contactType].city,
-											[domainInfo.contacts[contactType].stateOrProvince, domainInfo.contacts[contactType].postalCode].filter(Boolean).join(' '),
+											[domainInfo.contacts[contactType].state, domainInfo.contacts[contactType].postalCode].filter(Boolean).join(' '),
 											domainInfo.contacts[contactType].country,
 										].filter(Boolean),
 									).join(', ')
@@ -1187,7 +1184,7 @@ export default {
 				</div>
 
 				<div v-for="activity in history" class="border-l-2 border-neutral-300 dark:border-neutral-600 ml-3 py-3 pl-6 relative">
-					<div v-if="['domain-info', 'rdap', 'whois', 'whois2'].includes(activity.type)">
+					<div v-if="['info', 'rdap', 'whois'].includes(activity.type)">
 						<div class="absolute bg-stone-100 dark:bg-stone-700 rounded-full text-lg leading-none p-2 mt-2" style="left: -17px">
 							<template v-if="activity.detected_changes.includes('renewed')">🔁</template>
 							<template v-else-if="activity.detected_changes.includes('transfer-completed')">🤝</template>
