@@ -10,9 +10,13 @@ import { getDomain, parse } from 'tldts'
 import DateTime from './components/DateTime.vue'
 import { countryCodeToFlag } from './utils/geo.ts'
 
-const apiRequest = path => {
+function apiRequest(path, params = {}) {
 	const url = new URL(path, 'https://domains-api.com')
 	url.searchParams.set('key', import.meta.env.VITE_DOMAINS_API_KEY)
+
+	for (const [key, value] of Object.entries(params)) {
+		url.searchParams.set(key, value)
+	}
 
 	return fetch(url, {
 		method: 'GET',
@@ -379,6 +383,11 @@ export default {
 					// set domain info data
 					this.domainInfo = data
 					this.states.domain = 'loaded'
+
+					// check if a new domain diff exists
+					setTimeout(() => {
+						this.loadHistory()
+					}, 3000)
 				})
 				.catch(error => {
 					this.domainInfo.availability = 'error'
@@ -430,10 +439,16 @@ export default {
 		},
 
 		loadHistory() {
-			apiRequest(`domains/${this.domain}/history`)
+			const params = {}
+
+			if (this.history.length) {
+				params.after = this.history.at(0).created_at
+			}
+
+			apiRequest(`domains/${this.domain}/history`, params)
 				.then(response => response.json())
 				.then(data => {
-					this.history.push(...data)
+					this.history.unshift(...data)
 					this.states.history = 'loaded'
 				})
 				.catch(error => {
