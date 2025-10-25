@@ -804,7 +804,7 @@ export default {
 							<p v-if="domainInfo.contacts[contactType]?.name || domainInfo.contacts[contactType]?.organization" class="text-lg mb-1">
 								{{ uniq([domainInfo.contacts[contactType]?.name, domainInfo.contacts[contactType]?.organization].filter(Boolean)).join(', ') }}
 							</p>
-							<p v-else class="text-neutral-500 dark:text-neutral-400 mb-1">Unknown</p>
+							<p v-else class="text-neutral-500 dark:text-neutral-400 mb-1"><i>Redacted</i></p>
 
 							<p v-if="domainInfo.contacts[contactType]?.city || domainInfo.contacts[contactType]?.state || domainInfo.contacts[contactType]?.country" class="mt-1">
 								📍

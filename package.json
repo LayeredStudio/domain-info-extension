@@ -1,6 +1,6 @@
 {
 	"name": "domain-info",
-	"version": "2.6.0",
+	"version": "2.6.2",
 	"description": "Detailed info about a domain, DNS Records and tech stack",
 	"author": "Andrei <andrei@laye.red>",
 	"private": true,
