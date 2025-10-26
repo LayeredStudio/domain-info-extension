@@ -6,12 +6,16 @@ export default {
 	props: {
 		date: {
 			type: Date,
-			required: true
+			required: true,
 		},
 		style: {
 			type: String,
-			default: 'datetime'
-		}
+			default: 'datetime',
+		},
+		showTime: {
+			type: Boolean,
+			default: true,
+		},
 	},
 	methods: {
 		formatDistanceToNow,
@@ -21,9 +25,9 @@ export default {
 
 <template>
 	<span v-if="style === 'datetime'" :title="formatDistanceToNow(date, { addSuffix: true })">
-		{{ date.toLocaleString('default', { dateStyle: 'medium', timeStyle: 'short' }) }}
+		{{ date.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: showTime ? 'short' : undefined }) }}
 	</span>
-	<span v-else :title="date.toLocaleString('default', { dateStyle: 'medium', timeStyle: 'short' })">
+	<span v-else :title="date.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: showTime ? 'short' : undefined })">
 		{{ formatDistanceToNow(date, { addSuffix: true }) }}
 	</span>
 </template>

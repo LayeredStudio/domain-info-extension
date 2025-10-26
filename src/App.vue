@@ -1259,7 +1259,7 @@ export default {
 								{{ activity.data.venue ? 'at ' + activity.data.venue : '' }}
 							</h3>
 							<p class="text-neutral-600 dark:text-neutral-400">
-								<DateTime :date="new Date(activity.created_at)" :style="whoisTimeStyle"></DateTime> &middot; Source:
+								<DateTime :date="new Date(activity.created_at)" :showTime="false" :style="whoisTimeStyle"></DateTime> &middot; Source:
 								{{ activity.source || activity.data.source }}
 							</p>
 						</a>
