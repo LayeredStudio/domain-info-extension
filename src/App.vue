@@ -43,7 +43,7 @@ export default {
 			states: {
 				domain: 'loading',
 				whois: 'loading',
-				history: 'loading',
+				history: 'idle',
 				dns: 'loading',
 			},
 
@@ -59,6 +59,7 @@ export default {
 					updated: null,
 					expiry: null,
 				},
+				changes: 0,
 			},
 			contactTypes: ['registrant'],
 			contactType: 'registrant',
@@ -231,6 +232,11 @@ export default {
 		whoisGroupFields() {
 			return this.whoisGroup.map(g => g.fields).flat()
 		},
+		domainChanges() {
+			const historyLength = Array.isArray(this.history) ? this.history.length : 0
+
+			return Math.max(historyLength, this.domainInfo.changes)
+		},
 		nameServers() {
 			if (this.domainInfo.nameservers.length) {
 				return this.domainInfo.nameservers
@@ -298,7 +304,6 @@ export default {
 				this.tabType = 'ip'
 			} else if (parsed.isIcann) {
 				this.loadDomainInfo()
-				this.loadHistory()
 				this.loadDnsRecords()
 				//this.loadRelatedDomains()
 			} else {
@@ -315,6 +320,10 @@ export default {
 				const useLastView = true
 				if (useLastView && kv.lastview) {
 					this.view = kv.lastview
+
+					if (this.view === 'history') {
+						this.loadHistory()
+					}
 				}
 
 				if (kv.datetimestyle && kv.datetimestyle !== 'datetime') {
@@ -335,6 +344,8 @@ export default {
 
 			if (view === 'whois' && this.states.whois === 'idle') {
 				this.loadWhois()
+			} else if (view === 'history' && this.states.history === 'idle') {
+				this.loadHistory()
 			}
 
 			chrome.storage.sync.set({ lastview: view === 'whois' ? 'overview' : view })
@@ -384,10 +395,9 @@ export default {
 					this.domainInfo = data
 					this.states.domain = 'loaded'
 
-					// check if a new domain diff exists
-					setTimeout(() => {
-						this.loadHistory()
-					}, 3000)
+					if (this.states.history === 'loaded') {
+						this.loadHistory(true)
+					}
 				})
 				.catch(error => {
 					this.domainInfo.availability = 'error'
@@ -438,7 +448,12 @@ export default {
 			chrome.storage.sync.set({ datetimestyle: this.whoisTimeStyle })
 		},
 
-		loadHistory() {
+		loadHistory(refresh = false) {
+			if (this.states.history !== 'idle' && !refresh) {
+				return
+			}
+
+			this.states.history = 'loading'
 			const params = {}
 
 			if (this.history.length) {
@@ -686,14 +701,14 @@ export default {
 			<div
 				class="flex-1 py-3 cursor-pointer dark:text-white"
 				:class="view === 'history' ? 'font-bold' : 'bg-slate-100 hover:bg-indigo-100 dark:bg-slate-800 dark:hover:bg-indigo-900 font-medium'"
+				@mouseenter="() => loadHistory()"
 				@click="setView('history')"
 			>
 				History
 				<span
-					v-if="Array.isArray(history)"
 					class="bg-indigo-100 dark:bg-indigo-900 p-1 ml-1 rounded"
-					:class="history.length ? 'text-indigo-900 dark:text-indigo-100' : 'text-neutral-700 dark:text-neutral-300'"
-					>{{ history.length }}</span
+					:class="domainChanges ? 'text-indigo-900 dark:text-indigo-100' : 'text-neutral-700 dark:text-neutral-300'"
+					>{{ domainChanges }}</span
 				>
 			</div>
 			<div
