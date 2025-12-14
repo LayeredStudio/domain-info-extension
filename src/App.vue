@@ -1212,7 +1212,7 @@ export default {
 				</div>
 
 				<div v-for="activity in history" class="border-l-2 border-neutral-300 dark:border-neutral-600 ml-3 py-3 pl-6 relative">
-					<div v-if="['info', 'rdap', 'whois'].includes(activity.type)">
+					<div v-if="activity.type === 'info'">
 						<div class="absolute bg-stone-100 dark:bg-stone-700 rounded-full text-lg leading-none p-2 mt-2" style="left: -17px">
 							<template v-if="activity.detected_changes.includes('renewed')">🔁</template>
 							<template v-else-if="activity.detected_changes.includes('transfer-completed')">🤝</template>
@@ -1223,9 +1223,7 @@ export default {
 
 						<div class="bg-stone-100 dark:bg-neutral-800 dark:text-gray-200 rounded-lg py-3">
 							<h3 class="text-lg font-medium mx-3 mb-2">
-								{{
-									activity.text || `${activity.data.filter(item => item.path[0] !== 'date_updated').length} change(s) detected in ${activity.type.toUpperCase()}`
-								}}
+								{{ activity.text || `${activity.data.filter(item => item.path[0] !== 'date_updated').length} update(s) detected` }}
 							</h3>
 
 							<template v-for="item in activity.data">
@@ -1254,7 +1252,7 @@ export default {
 							</template>
 							<p class="text-neutral-600 dark:text-neutral-400 mt-2 px-3">
 								<DateTime :date="new Date(activity.created_at)" :style="whoisTimeStyle" @click="switchWhoisTimeStyle"></DateTime>
-								&middot; Source: <code class="uppercase">{{ activity.source || activity.type }}</code>
+								&middot; Source: <code class="uppercase">{{ activity.source }}</code>
 							</p>
 						</div>
 					</div>
