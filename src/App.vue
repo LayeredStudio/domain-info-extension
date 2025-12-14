@@ -566,9 +566,14 @@ export default {
 			this.recordsGrouped[record.type][hash].data.push(record.data)
 		},
 
+		getDomainLogoUrl(urlDomainEmail, size = 32) {
+			const domain = getDomain(urlDomainEmail)
+
+			return `https://www.google.com/s2/favicons?sz=${size}&domain_url=${domain}`
+		},
 		getPicture(email) {
 			email = String(email).trim().toLowerCase()
-			const domainLogo = `https://logo.clearbit.com/${this.domain}?size=100`
+			const domainLogo = this.getDomainLogoUrl(this.domain)
 
 			return this.isEmail(email) ? `https://www.gravatar.com/avatar/${md5(email)}?s=100&d=${domainLogo}` : domainLogo
 		},
@@ -874,7 +879,7 @@ export default {
 								<Popper v-if="domainInfo.registrar" :hover="true" placement="top">
 									<a v-if="domainInfo.registrar.url && domainInfo.registrar.url !== 'http://'" :href="domainInfo.registrar.url" target="_blank">
 										<img
-											:src="`https://logo.clearbit.com/${getDomain(domainInfo.registrar.url)}?size=32`"
+											:src="getDomainLogoUrl(domainInfo.registrar.url)"
 											@error="$event.target.style.display = 'none'"
 											height="16"
 											class="float-left h-4 mr-1 rounded"
@@ -973,14 +978,7 @@ export default {
 							:href="action.url"
 							target="_blank"
 							class="inline-block px-2 py-1 rounded bg-slate-50 border border-slate-200 hover:border-slate-300 mx-1 mb-2"
-							><img
-								class="float-left me-1"
-								:src="`https://www.google.com/s2/favicons?sz=32&domain_url=${getDomain(action.url)}`"
-								:alt="action.name"
-								width="16"
-								height="16"
-							/>
-							{{ action.name }}</a
+							><img class="float-left me-1" :src="getDomainLogoUrl(action.url)" :alt="action.name" width="16" height="16" /> {{ action.name }}</a
 						>
 					</div>
 				</div>
