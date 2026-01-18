@@ -395,7 +395,7 @@ export default {
 					this.domainInfo = data
 					this.states.domain = 'loaded'
 
-					if (this.states.history === 'loaded') {
+					if (this.states.history === 'loaded' && this.domainInfo.changes > this.history.length) {
 						this.loadHistory(true)
 					}
 				})
@@ -569,7 +569,7 @@ export default {
 		getDomainLogoUrl(urlDomainEmail, size = 32) {
 			const domain = getDomain(urlDomainEmail)
 
-			return `https://www.google.com/s2/favicons?sz=${size}&domain_url=${domain}`
+			return `https://www.google.com/s2/favicons?sz=${size}&domain=${domain}`
 		},
 		getPicture(email) {
 			email = String(email).trim().toLowerCase()
@@ -644,6 +644,17 @@ export default {
 			setTimeout(() => {
 				target.textContent = originalText
 			}, 1500)
+		},
+
+		addReferralParamToLink(link) {
+			const url = new URL(link)
+
+			url.searchParams.set('ref', 'domo.domains')
+			url.searchParams.set('utm_source', 'domo.domains')
+			url.searchParams.set('utm_medium', 'chrome-extension')
+			url.searchParams.set('utm_campaign', 'domo.domains referral')
+
+			return url.toString()
 		},
 	},
 	watch: {
@@ -1261,7 +1272,7 @@ export default {
 
 						<a
 							class="block transition-colors border border-green-200 bg-green-100 hover:border-green-300 dark:border-emerald-800 dark:bg-emerald-950 rounded-lg dark:hover:border-emerald-700 p-3"
-							:href="activity.data.source === 'namebio' ? `https://namebio.com/${domain}?ref=dmns.app` : `https://${activity.data.source}`"
+							:href="addReferralParamToLink(activity.source)"
 							target="_blank"
 						>
 							<h3 class="text-lg font-medium text-green-700 dark:text-emerald-300 mb-2">
@@ -1271,24 +1282,24 @@ export default {
 							</h3>
 							<p class="text-neutral-600 dark:text-neutral-400">
 								<DateTime :date="new Date(activity.created_at)" :showTime="false" :style="whoisTimeStyle"></DateTime> &middot; Source:
-								{{ activity.source || activity.data.source }}
+								{{ getDomain(activity.source) }}
 							</p>
 						</a>
 					</div>
 					<div v-else-if="activity.type === 'url'">
 						<div class="absolute bg-sky-100 dark:bg-sky-700 rounded-full text-lg leading-none p-2 mt-2" style="left: -17px">
-							{{ activity.data.url.includes('twitter.com') ? '🐦' : '🔗' }}
+							{{ activity.source.includes('twitter.com') ? '🐦' : '🔗' }}
 						</div>
 
 						<a
-							:href="activity.data.url"
+							:href="addReferralParamToLink(activity.source)"
 							target="_blank"
 							class="block rounded-lg p-3 transition-colors border bg-slate-50 border-slate-100 hover:bg-slate-100 hover:border-slate-200 dark:bg-slate-900 dark:border-slate-800 hover:dark:bg-slate-900 dark:hover:border-slate-700"
 						>
 							<h3 class="text-lg font-medium mb-2 dark:text-neutral-200">{{ activity.data.title }}</h3>
 							<p class="mb-2 leading-relaxed dark:text-neutral-200">{{ activity.data.description }}</p>
 							<p class="text-neutral-600 dark:text-neutral-400">
-								<DateTime :date="new Date(activity.created_at)" :style="whoisTimeStyle"></DateTime> &middot; {{ getDomain(activity.data.url) }}
+								<DateTime :date="new Date(activity.created_at)" :style="whoisTimeStyle"></DateTime> &middot; {{ getDomain(activity.source) }}
 							</p>
 						</a>
 					</div>
